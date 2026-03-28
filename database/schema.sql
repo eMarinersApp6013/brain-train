@@ -84,6 +84,19 @@ CREATE TABLE users (
     chatwoot_contact_id         INT,
     chatwoot_conversation_id    INT,
     module_state                JSONB,
+    gender                      VARCHAR(10),
+    country                     VARCHAR(50),
+    country_code                VARCHAR(5),
+    marital_status              VARCHAR(20),
+    has_kids                    BOOLEAN,
+    interests                   TEXT,
+    birthday                    DATE,
+    anniversary                 DATE,
+    profession                  VARCHAR(100),
+    daily_mood                  VARCHAR(20),
+    profile_data                JSONB DEFAULT '{}',
+    profile_step                VARCHAR(30),
+    preferred_modules           TEXT[],
     joined_at                   TIMESTAMPTZ DEFAULT NOW(),
     last_active                 TIMESTAMPTZ DEFAULT NOW()
 );
@@ -129,8 +142,7 @@ CREATE TABLE user_sessions (
     hint_used               BOOLEAN DEFAULT false,
     response_time_seconds   INT,
     session_date            DATE DEFAULT CURRENT_DATE,
-    session_type            VARCHAR(20) DEFAULT 'daily',
-    UNIQUE(user_id, session_date, session_type)
+    session_type            VARCHAR(20) DEFAULT 'daily'
 );
 
 -- ============================================================
@@ -223,5 +235,6 @@ CREATE INDEX idx_questions_type             ON questions(type);
 CREATE INDEX idx_questions_difficulty       ON questions(difficulty);
 CREATE INDEX idx_user_sessions_user_id      ON user_sessions(user_id);
 CREATE INDEX idx_user_sessions_session_date ON user_sessions(session_date);
+CREATE INDEX idx_user_sessions_user_date_type ON user_sessions(user_id, session_date, session_type);
 CREATE INDEX idx_scores_user_id             ON scores(user_id);
 CREATE INDEX idx_leaderboard_week_start     ON leaderboard_weekly(week_start);

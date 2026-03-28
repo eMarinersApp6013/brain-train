@@ -59,6 +59,53 @@ async function getDailyQuestion(userId, dayOfWeek, difficulty, audience) {
 }
 
 /**
+ * Get multiple daily questions for a session, avoiding recently seen questions.
+ * Falls back to other question types if not enough of the exact type are available.
+ */
+async function getDailyQuestions(userId, dayOfWeek, difficulty, audience, count = 10) {
+  const type = DAY_TYPE_MAP[dayOfWeek];
+  if (!type) return [];
+
+  const questions = await getMany(
+    `SELECT * FROM questions
+     WHERE type = $1
+       AND difficulty = $2
+       AND (audience = $3 OR audience = 'adult')
+       AND is_active = true
+       AND id NOT IN (
+         SELECT question_id FROM user_sessions
+         WHERE user_id = $4
+           AND session_date >= CURRENT_DATE - INTERVAL '30 days'
+       )
+     ORDER BY RANDOM()
+     LIMIT $5`,
+    [type, difficulty, audience, userId, count]
+  );
+
+  // If not enough questions of the exact type, fill with other types
+  if (questions.length < count) {
+    const moreNeeded = count - questions.length;
+    const existingIds = questions.map(q => q.id);
+    const extraQ = `SELECT * FROM questions
+     WHERE difficulty = $1
+       AND (audience = $2 OR audience = 'adult')
+       AND is_active = true
+       ${existingIds.length > 0 ? 'AND id NOT IN (' + existingIds.join(',') + ')' : ''}
+       AND id NOT IN (
+         SELECT question_id FROM user_sessions
+         WHERE user_id = $3
+           AND session_date >= CURRENT_DATE - INTERVAL '7 days'
+       )
+     ORDER BY RANDOM()
+     LIMIT $4`;
+    const extra = await getMany(extraQ, [difficulty, audience, userId, moreNeeded]);
+    questions.push(...extra);
+  }
+
+  return questions;
+}
+
+/**
  * Get a question by its ID.
  */
 async function getQuestionById(id) {
@@ -216,6 +263,7 @@ function checkMemoryRecall(correctWords, userWords) {
 
 module.exports = {
   getDailyQuestion,
+  getDailyQuestions,
   getQuestionById,
   getDayType,
   getChallengeType,

@@ -95,14 +95,18 @@ async function handleCommand(user, message, conversationId) {
   }
 
   if (cmd === 'PROFILE') {
-    const cognitiveProfile = require('./modules/cognitive_profile');
-    await cognitiveProfile.handle(user, message, conversationId);
+    const profileBuilder = require('./modules/profile_builder');
+    await profileBuilder.handle(user, message, conversationId);
     return true;
   }
 
   if (cmd === 'BRAIN HEALTH' || cmd === 'HEALTH') {
     await brainHealth.handle(user, message, conversationId);
     return true;
+  }
+
+  if (cmd === 'MODULES' || cmd === 'EXPLORE') {
+    return await handleModulesMenu(user, conversationId);
   }
 
   return false; // Not a command
@@ -127,6 +131,22 @@ async function handleModuleResponse(user, message, conversationId) {
 
   if (state.module === 'duel') {
     await friendDuel.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'module_select') {
+    return await handleModuleChoice(user, message, conversationId);
+  }
+
+  if (state.module === 'mood_check') {
+    const profileBuilder = require('./modules/profile_builder');
+    await profileBuilder.handleMoodResponse(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'profile_build') {
+    const profileBuilder = require('./modules/profile_builder');
+    await profileBuilder.handle(user, message, conversationId);
     return true;
   }
 
@@ -216,6 +236,62 @@ async function handleLevelChange(user, message, conversationId) {
   await db.query('UPDATE users SET difficulty = $1, module_state = NULL WHERE id = $2', [difficulty, user.id]);
   await whatsapp.sendMessage(conversationId, `✅ Difficulty changed to *${difficulty}*. Your next challenge will match this level.`);
   return true;
+}
+
+async function handleModulesMenu(user, conversationId) {
+  let msg = '🧠 *BrainPing Special Modules*\n\n';
+  msg += 'Reply with the number to start:\n\n';
+  msg += '*1* 🧠 Brain Age Test — How old is your brain?\n';
+  msg += '*2* 🧩 IQ Estimation — Test your IQ range\n';
+  msg += '*3* ⚡ Speed Challenge — Quick-fire bonus round\n';
+  msg += '*4* ⚔️ Friend Duel — Challenge a friend\n';
+  msg += '*5* 💡 Cognitive Profile — Discover your thinking style\n';
+  msg += '*6* 📊 Brain Health — Your brain fitness score\n';
+  msg += '*7* 🏆 Leaderboard — See top performers\n';
+  msg += '*8* 🏅 Badges — View achievements\n';
+  msg += '\n💡 Type *MENU* for all commands';
+
+  await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
+    JSON.stringify({ module: 'module_select', step: 0 }), user.id
+  ]);
+  await whatsapp.sendMessage(conversationId, msg);
+  return true;
+}
+
+async function handleModuleChoice(user, message, conversationId) {
+  const choice = message.trim();
+  await db.query("UPDATE users SET module_state = NULL WHERE id = $1", [user.id]);
+
+  switch (choice) {
+    case '1': await brainAge.handle(user, message, conversationId); return true;
+    case '2': await iqTest.handle(user, message, conversationId); return true;
+    case '3':
+      const speed = require('./modules/speed_challenge');
+      await speed.handle(user);
+      return true;
+    case '4':
+      await whatsapp.sendMessage(conversationId, 'To duel, type: *DUEL +91XXXXXXXXXX*');
+      return true;
+    case '5':
+      const cogProfile = require('./modules/cognitive_profile');
+      await cogProfile.handle(user, message, conversationId);
+      return true;
+    case '6':
+      await brainHealth.handle(user, message, conversationId);
+      return true;
+    case '7':
+      await leaderboard.handle(user, message, conversationId);
+      return true;
+    case '8':
+      await badges.handle(user, message, conversationId);
+      return true;
+    default:
+      await whatsapp.sendMessage(conversationId, 'Please reply with a number 1-8.');
+      await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
+        JSON.stringify({ module: 'module_select', step: 0 }), user.id
+      ]);
+      return true;
+  }
 }
 
 module.exports = { handleCommand };

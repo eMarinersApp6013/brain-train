@@ -22,7 +22,8 @@ function createApp(type) {
     secret: process.env.SESSION_SECRET || 'brainping-secret-change-me',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000, secure: false }
+    rolling: true,
+    cookie: { maxAge: 6 * 60 * 60 * 1000, secure: false }
   }));
 
   if (type === 'main') {

@@ -403,8 +403,13 @@ router.delete('/questions/:id', async (req, res) => {
 
 router.post('/questions/generate', async (req, res) => {
   try {
-    const { type, difficulty, audience, count } = req.body;
-    const questions = await claude.generateQuestions(type, difficulty, audience, count || 5);
+    const { type, difficulty, audience, count, provider } = req.body;
+    let questions;
+    if (provider === 'openai') {
+      questions = await openai.generateQuestions(type, difficulty, audience, count || 5);
+    } else {
+      questions = await claude.generateQuestions(type, difficulty, audience, count || 5);
+    }
     res.json({ questions });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -42,30 +42,50 @@ async function sendChallenge(user) {
   const dayOfWeek = content.getDayType(today);
   const weekNum = content.getWeekNumber();
 
-  // Check for Friday memory recall (evening)
+  // Friday memory recall (evening)
   const hour = today.getHours();
-  if (dayOfWeek === 'fri' && hour >= 18) {
+  if (dayOfWeek === 'friday' && hour >= 18) {
     return await sendMemoryRecall(user);
   }
 
-  const question = await content.getDailyQuestion(user.id, dayOfWeek, user.difficulty, user.mode === 'adult' ? 'adult' : `kids-${user.age_group}`);
-  if (!question) {
-    return { sent: false, reason: 'no_question' };
+  const audience = user.mode === 'adult' ? 'adult' : `kids-${user.age_group}`;
+
+  // Get 10 questions for today's session
+  const questions = await content.getDailyQuestions(user.id, dayOfWeek, user.difficulty, audience, 10);
+  if (!questions || questions.length === 0) {
+    return { sent: false, reason: 'no_questions' };
   }
 
-  const message = content.formatChallengeMessage(question, dayOfWeek, weekNum);
-
-  // Send leaderboard shoutout before challenge
-  await sendLeaderboardShoutout(user.chatwoot_conversation_id);
-
-  await sendMessage(user.chatwoot_conversation_id, message);
-
-  await db.query(
-    'INSERT INTO user_sessions (user_id, question_id, sent_at, session_date, session_type) VALUES ($1, $2, NOW(), CURRENT_DATE, $3)',
-    [user.id, question.id, 'daily']
+  // Send session start message
+  const challengeType = content.getChallengeType(dayOfWeek);
+  const botName = await db.getSetting('BOT_NAME') || 'BrainPing';
+  await sendMessage(user.chatwoot_conversation_id,
+    `🧠 *${botName} Daily Session*\n\n📋 Today's challenge: *${challengeType}*\n📊 Questions: ${questions.length}\n\nLet's begin! 👇`
   );
 
-  return { sent: true, questionId: question.id };
+  // Create all session entries
+  for (const q of questions) {
+    await db.query(
+      'INSERT INTO user_sessions (user_id, question_id, sent_at, session_date, session_type) VALUES ($1, $2, NULL, CURRENT_DATE, $3)',
+      [user.id, q.id, 'daily']
+    );
+  }
+
+  // Send first question
+  const firstQ = questions[0];
+  // Mark first question as sent
+  await db.query(
+    'UPDATE user_sessions SET sent_at = NOW() WHERE user_id = $1 AND question_id = $2 AND session_date = CURRENT_DATE AND sent_at IS NULL',
+    [user.id, firstQ.id]
+  );
+
+  const msg = `*Question 1/${questions.length}*\n\n${content.formatChallengeMessage(firstQ, dayOfWeek, weekNum)}`;
+  await sendMessage(user.chatwoot_conversation_id, msg);
+
+  // Send leaderboard shoutout after first question
+  await sendLeaderboardShoutout(user.chatwoot_conversation_id);
+
+  return { sent: true, questionCount: questions.length };
 }
 
 async function sendMemoryRecall(user) {
@@ -119,7 +139,7 @@ async function sendWelcomeMessage(conversationId) {
 }
 
 async function sendMenuMessage(conversationId) {
-  const msg = `📋 *BrainPing Menu*\n\nType any command:\n\n📊 *STATS* - Your scores & progress\n💡 *HINT* - Get a clue (-1 point)\n⏸️ *PAUSE* - Stop daily messages\n▶️ *RESUME* - Restart messages\n📈 *LEVEL* - Change difficulty\n⭐ *PREMIUM* - See plans\n🧠 *BRAIN AGE* - Take brain age test\n🧩 *IQ* - IQ estimation (Premium)\n⚔️ *DUEL +91XXX* - Challenge a friend\n🏆 *LEADERBOARD* - Weekly top 10\n🏅 *BADGES* - Your achievements\n📄 *REPORT* - Weekly brain report\n🛑 *STOP* - Unsubscribe`;
+  const msg = `📋 *BrainPing Menu*\n\nType any command:\n\n📊 *STATS* - Your scores & progress\n💡 *HINT* - Get a clue (-1 point)\n⏸️ *PAUSE* - Stop daily messages\n▶️ *RESUME* - Restart messages\n📈 *LEVEL* - Change difficulty\n⭐ *PREMIUM* - See plans\n🎯 *MODULES* - Explore special modules\n🧠 *BRAIN AGE* - Take brain age test\n🧩 *IQ* - IQ estimation (Premium)\n⚔️ *DUEL +91XXX* - Challenge a friend\n🏆 *LEADERBOARD* - Weekly top 10\n🏅 *BADGES* - Your achievements\n📄 *REPORT* - Weekly brain report\n🛑 *STOP* - Unsubscribe`;
   await sendMessage(conversationId, msg);
 }
 
