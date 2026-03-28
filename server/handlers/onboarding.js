@@ -176,27 +176,29 @@ async function completeOnboarding(user, conversationId, timeLabel) {
   await db.query("UPDATE users SET onboarding_step = 'complete', is_active = true WHERE id = $1", [user.id]);
 
   const botName = await db.getSetting('BOT_NAME') || 'BrainPing';
+  const updatedUser = await db.getOne('SELECT name FROM users WHERE id = $1', [user.id]);
+  const name = updatedUser?.name || 'Brain Trainer';
+
   await whatsapp.sendMessage(conversationId,
-    `✅ *You're all set!*\n\nYour first ${botName} challenge arrives tomorrow at *${timeLabel}*.\n\nHere's a quick taste — try this now! 👇`
+    `✅ *Welcome aboard, ${name}!*\n\nYour daily ${botName} challenge arrives at *${timeLabel}*.\n\nBut why wait? Try one of our modules now! 👇`
   );
 
-  // Send a sample question
-  const today = new Date();
-  const dayOfWeek = content.getDayType(today);
-  const updatedUser = await db.getOne('SELECT * FROM users WHERE id = $1', [user.id]);
-  const audience = updatedUser.mode === 'adult' ? 'adult' : `kids-${updatedUser.age_group}`;
-  const question = await content.getDailyQuestion(user.id, dayOfWeek, updatedUser.difficulty, audience);
+  // Show modules menu
+  let msg = '🧠 *Available Modules:*\n\n';
+  msg += '*1* 🧠 Brain Age Test — How old is your brain?\n';
+  msg += '*2* 🧩 IQ Estimation — Test your IQ range\n';
+  msg += '*3* ⚡ Speed Challenge — Quick-fire bonus round\n';
+  msg += '*4* ⚔️ Friend Duel — Challenge a friend\n';
+  msg += '*5* 💡 Cognitive Profile — Your thinking style\n';
+  msg += '*6* 📊 Brain Health Score — Track fitness\n';
+  msg += '*7* 🏆 Leaderboard — Top performers\n';
+  msg += '*8* 🏅 Badges — Achievements\n';
+  msg += '\n_Reply with a number to start, or type *MENU* for all commands._';
 
-  if (question) {
-    const msg = content.formatChallengeMessage(question, dayOfWeek, content.getWeekNumber());
-    await whatsapp.sendMessage(conversationId, msg);
-    await db.query(
-      'INSERT INTO user_sessions (user_id, question_id, sent_at, session_date, session_type) VALUES ($1, $2, NOW(), CURRENT_DATE, $3)',
-      [user.id, question.id, 'daily']
-    );
-  }
-
-  await whatsapp.sendMessage(conversationId, '💡 Type *MENU* anytime to see all commands.');
+  await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
+    JSON.stringify({ module: 'module_select', step: 0 }), user.id
+  ]);
+  await whatsapp.sendMessage(conversationId, msg);
 }
 
 module.exports = { handleOnboarding };

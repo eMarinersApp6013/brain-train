@@ -41,11 +41,16 @@
         <option value="13:00">Afternoon 1PM</option>
         <option value="19:00">Evening 7PM</option>
       </select>
+      <select id="wl-plan" class="input">
+        <option value="free">Free</option>
+        <option value="premium">Premium</option>
+        <option value="corporate">Corporate</option>
+      </select>
       <button class="btn btn-success" onclick="addWhitelist()">Add</button>
     </div>
 
     <table class="table mt-10">
-      <thead><tr><th>Phone</th><th>Label</th><th>Difficulty</th><th>Time</th><th>Active</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Phone</th><th>Label</th><th>Difficulty</th><th>Time</th><th>Plan</th><th>Active</th><th>Actions</th></tr></thead>
       <tbody id="whitelist-table"></tbody>
     </table>
   </div>

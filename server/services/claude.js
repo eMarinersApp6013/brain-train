@@ -33,7 +33,9 @@ Return ONLY the JSON array, no other text.`;
     });
 
     const text = response.content[0].text;
-    const questions = JSON.parse(text);
+    // Strip markdown code fences if present
+    const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const questions = JSON.parse(cleanText);
     return questions;
   } catch (err) {
     console.error('Claude generateQuestions error:', err.message);

@@ -99,11 +99,22 @@ router.get('/whitelist', async (req, res) => {
 
 router.post('/whitelist', async (req, res) => {
   try {
-    const { phone, label, difficulty, time_slot } = req.body;
+    const { phone, label, difficulty, time_slot, plan } = req.body;
+    const planType = plan || 'free';
     const row = await getOne(
-      'INSERT INTO whitelist (phone, label, difficulty, time_slot) VALUES ($1, $2, $3, $4) RETURNING *',
-      [phone, label, difficulty, time_slot]
+      'INSERT INTO whitelist (phone, label, difficulty, time_slot, plan_type) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [phone, label, difficulty, time_slot, planType]
     );
+
+    // If plan specified, auto-assign when user registers
+    if (plan) {
+      const planRow = await getOne('SELECT id FROM plans WHERE LOWER(name) = $1', [plan.toLowerCase()]);
+      if (planRow) {
+        // Store plan preference in whitelist entry or create user with plan
+        await query('UPDATE whitelist SET difficulty = $1 WHERE phone = $2', [difficulty || 'medium', phone]);
+      }
+    }
+
     res.json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -229,17 +240,17 @@ router.get('/users', async (req, res) => {
 
     if (search) {
       params.push(`%${search}%`);
-      where += ` AND (name ILIKE $${params.length} OR phone ILIKE $${params.length})`;
+      where += ` AND (u.name ILIKE $${params.length} OR u.phone ILIKE $${params.length})`;
     }
     if (status === 'premium') {
-      where += ' AND is_premium = true';
+      where += ' AND u.is_premium = true';
     } else if (status === 'free') {
-      where += ' AND is_premium = false';
+      where += ' AND u.is_premium = false';
     }
 
-    const countResult = await getOne(`SELECT COUNT(*)::int AS count FROM users ${where}`, params);
+    const countResult = await getOne(`SELECT COUNT(*)::int AS count FROM users u ${where}`, params);
     const users = await getMany(
-      `SELECT * FROM users ${where} ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      `SELECT u.*, p.name as plan_name FROM users u LEFT JOIN plans p ON u.plan_id = p.id ${where} ORDER BY u.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
       [...params, limit, offset]
     );
 
