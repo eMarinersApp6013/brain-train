@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrainPing</title>
+  <link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h1>🧠 BrainPing</h1>
+      <p>Your Brain Training Portal</p>
+      <div id="phone-step">
+        <input type="tel" id="login-phone" placeholder="+91 98765 43210" maxlength="15">
+        <button onclick="sendOTP()">Send OTP</button>
+      </div>
+      <div id="otp-step" class="hidden">
+        <input type="text" id="login-otp" placeholder="Enter 6-digit OTP" maxlength="6">
+        <button onclick="verifyOTP()">Verify</button>
+      </div>
+      <p id="login-msg" class="msg"></p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="app hidden">
+    <nav class="top-nav">
+      <div class="nav-brand">🧠 BrainPing</div>
+      <div class="nav-tabs">
+        <a href="#" data-tab="dashboard" class="active">Dashboard</a>
+        <a href="#" data-tab="results">Results</a>
+        <a href="#" data-tab="assessments">Assessments</a>
+        <a href="#" data-tab="badges">Badges</a>
+        <a href="#" data-tab="leaderboard">Leaderboard</a>
+        <a href="#" data-tab="settings">Settings</a>
+        <a href="#" data-tab="subscription">Plan</a>
+      </div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </nav>
+
+    <main class="content">
+      <div id="toast" class="toast hidden"></div>
+
+      <%- include('partials/dashboard') %>
+      <%- include('partials/results') %>
+      <%- include('partials/assessments') %>
+      <%- include('partials/badges') %>
+      <%- include('partials/leaderboard') %>
+      <%- include('partials/settings') %>
+      <%- include('partials/subscription') %>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/portal.js"></script>
+</body>
+</html>

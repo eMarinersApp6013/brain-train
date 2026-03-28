@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrainPing Admin</title>
+  <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h1>🧠 BrainPing</h1>
+      <p>Admin Panel</p>
+      <input type="password" id="login-password" placeholder="Admin Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()">Login</button>
+      <p id="login-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="app hidden">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧠 BrainPing</h2>
+        <small>Admin Panel</small>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" data-section="dashboard" class="active">📊 Dashboard</a></li>
+        <li><a href="#" data-section="testmode">🧪 Test Mode</a></li>
+        <li><a href="#" data-section="content">📝 Content</a></li>
+        <li><a href="#" data-section="generator">🤖 AI Generator</a></li>
+        <li><a href="#" data-section="users">👥 Users</a></li>
+        <li><a href="#" data-section="plans">💳 Plans</a></li>
+        <li><a href="#" data-section="modules">🔧 Modules</a></li>
+        <li><a href="#" data-section="kids">👶 Kids Mode</a></li>
+        <li><a href="#" data-section="leaderboard">🏆 Leaderboard</a></li>
+        <li><a href="#" data-section="ai-settings">🤖 AI Settings</a></li>
+        <li><a href="#" data-section="settings">⚙️ Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button onclick="doLogout()" class="btn-logout">Logout</button>
+      </div>
+    </nav>
+
+    <!-- Content Area -->
+    <main class="main-content">
+      <div id="toast" class="toast hidden"></div>
+
+      <%- include('partials/dashboard') %>
+      <%- include('partials/testmode') %>
+      <%- include('partials/content') %>
+      <%- include('partials/generator') %>
+      <%- include('partials/users') %>
+      <%- include('partials/plans') %>
+      <%- include('partials/modules') %>
+      <%- include('partials/kids') %>
+      <%- include('partials/leaderboard') %>
+      <%- include('partials/ai_settings') %>
+      <%- include('partials/settings') %>
+    </main>
+  </div>
+
+  <script src="/admin/js/api.js"></script>
+  <script src="/admin/js/admin.js"></script>
+</body>
+</html>

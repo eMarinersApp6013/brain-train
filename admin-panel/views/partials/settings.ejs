@@ -1,0 +1,45 @@
+<section id="sec-settings" class="section">
+  <h2>Settings</h2>
+
+  <div class="card">
+    <h3>General Settings</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Bot Name</label>
+        <input type="text" id="set-botname" class="input" placeholder="BrainPing">
+      </div>
+      <div class="form-group">
+        <label>Timezone</label>
+        <input type="text" id="set-timezone" class="input" placeholder="Asia/Kolkata">
+      </div>
+      <div class="form-group">
+        <label>Trigger Keyword</label>
+        <input type="text" id="set-trigger" class="input" placeholder="brain">
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-20">
+    <h3>Chatwoot Configuration</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Chatwoot URL</label>
+        <input type="text" id="set-chatwoot-url" class="input" placeholder="https://chat.nordsurge.tech">
+      </div>
+      <div class="form-group">
+        <label>API Token</label>
+        <input type="password" id="set-chatwoot-token" class="input" placeholder="Chatwoot API Token">
+      </div>
+      <div class="form-group">
+        <label>Inbox ID</label>
+        <input type="text" id="set-chatwoot-inbox" class="input" placeholder="3">
+      </div>
+    </div>
+    <button class="btn btn-secondary mt-10" onclick="testChatwoot()">Test Connection</button>
+    <span id="chatwoot-status" class="ml-10"></span>
+  </div>
+
+  <div class="mt-20">
+    <button class="btn btn-primary" onclick="saveSettings()">Save All Settings</button>
+  </div>
+</section>

@@ -1,0 +1,48 @@
+<section id="sec-dashboard" class="section active">
+  <h2>Dashboard</h2>
+
+  <div class="stat-grid">
+    <div class="stat-card border-primary">
+      <div class="stat-number" id="stat-total-users">0</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card border-success">
+      <div class="stat-number" id="stat-active-today">0</div>
+      <div class="stat-label">Active Today</div>
+    </div>
+    <div class="stat-card border-warning">
+      <div class="stat-number" id="stat-messages-sent">0</div>
+      <div class="stat-label">Sessions Today</div>
+    </div>
+    <div class="stat-card border-primary">
+      <div class="stat-number" id="stat-window-open">0</div>
+      <div class="stat-label">Window Open</div>
+    </div>
+    <div class="stat-card border-success">
+      <div class="stat-number" id="stat-premium">0</div>
+      <div class="stat-label">Premium Users</div>
+    </div>
+    <div class="stat-card border-warning">
+      <div class="stat-number" id="stat-revenue">₹0</div>
+      <div class="stat-label">Monthly Revenue</div>
+    </div>
+  </div>
+
+  <div class="card mt-20">
+    <h3>System Status</h3>
+    <div class="status-row">
+      <span class="status-item"><span class="status-dot" id="status-db"></span> Database</span>
+      <span class="status-item"><span class="status-dot" id="status-chatwoot"></span> Chatwoot</span>
+      <span class="status-item"><span class="status-dot" id="status-claude"></span> Claude AI</span>
+      <span class="status-item"><span class="status-dot" id="status-openai"></span> OpenAI</span>
+    </div>
+  </div>
+
+  <div class="card mt-20">
+    <h3>Recent Activity</h3>
+    <table class="table">
+      <thead><tr><th>Time</th><th>User</th><th>Type</th><th>Result</th><th>Points</th></tr></thead>
+      <tbody id="activity-feed"></tbody>
+    </table>
+  </div>
+</section>

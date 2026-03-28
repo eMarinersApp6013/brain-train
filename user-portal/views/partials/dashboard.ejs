@@ -1,0 +1,41 @@
+<section id="tab-dashboard" class="tab-section active">
+  <div class="welcome-card">
+    <h2 id="welcome-msg">Welcome back!</h2>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card streak-card">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value" id="dash-streak">0</div>
+      <div class="stat-label">Day Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value" id="dash-points">0</div>
+      <div class="stat-label">Total Points</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-value" id="dash-accuracy">0%</div>
+      <div class="stat-label">Accuracy</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Brain Health Score</h3>
+    <div id="health-score-container">
+      <div class="health-gauge">
+        <div class="gauge-fill" id="health-gauge" style="width: 0%"></div>
+      </div>
+      <div class="health-value" id="health-value">-</div>
+    </div>
+    <div id="health-upgrade" class="hidden upgrade-prompt">
+      🔒 Upgrade to Premium to see your Brain Health Score!
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Recent Activity</h3>
+    <div id="recent-activity" class="activity-list"></div>
+  </div>
+</section>

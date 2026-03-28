@@ -1,0 +1,14 @@
+<section id="sec-leaderboard" class="section">
+  <h2>Leaderboard</h2>
+
+  <div class="card">
+    <div class="flex-between">
+      <h3>Weekly Leaderboard</h3>
+      <input type="week" id="lb-week" class="input" onchange="loadLeaderboard()">
+    </div>
+    <table class="table mt-10">
+      <thead><tr><th>Rank</th><th>Name</th><th>Phone</th><th>Points</th><th>Accuracy</th></tr></thead>
+      <tbody id="leaderboard-table"></tbody>
+    </table>
+  </div>
+</section>

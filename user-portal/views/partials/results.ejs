@@ -1,0 +1,28 @@
+<section id="tab-results" class="tab-section">
+  <h2>Results Calendar</h2>
+  <div class="card">
+    <div class="calendar-nav">
+      <button class="btn btn-sm" onclick="prevMonth()">&lt;</button>
+      <span id="cal-month-label">March 2026</span>
+      <button class="btn btn-sm" onclick="nextMonth()">&gt;</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid">
+      <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
+      <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
+    </div>
+    <div class="calendar-legend">
+      <span class="legend-item"><span class="dot green"></span> Correct</span>
+      <span class="legend-item"><span class="dot red"></span> Wrong</span>
+      <span class="legend-item"><span class="dot gray"></span> Missed</span>
+    </div>
+  </div>
+
+  <div class="card mt-10">
+    <h3>Monthly Stats</h3>
+    <div class="stats-row">
+      <div class="mini-stat"><strong id="res-answered">0</strong><br>Answered</div>
+      <div class="mini-stat"><strong id="res-correct">0</strong><br>Correct</div>
+      <div class="mini-stat"><strong id="res-points">0</strong><br>Points</div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,15 @@
+{
+  "name": "brainping",
+  "version": "1.0.0",
+  "description": "BrainPing - SaaS Brain Training Platform via WhatsApp",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "db:migrate": "psql -U postgres -d brainping -f database/schema.sql",
+    "db:seed": "psql -U postgres -d brainping -f database/seeds.sql",
+    "db:reset": "npm run db:migrate && npm run db:seed",
+    "import:csv": "node server/scripts/import_csv.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
