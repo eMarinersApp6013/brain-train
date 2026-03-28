@@ -11,6 +11,8 @@ const portalRoutes = require('./routes/portal');
 function createApp(type) {
   const app = express();
 
+  app.set('trust proxy', 1);
+
   app.use(cors());
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json({ limit: '10mb' }));

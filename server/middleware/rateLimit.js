@@ -5,7 +5,8 @@ const webhookLimiter = rateLimit({
   max: 100,
   message: { error: 'Too many requests' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false }
 });
 
 const apiLimiter = rateLimit({
@@ -13,7 +14,8 @@ const apiLimiter = rateLimit({
   max: 60,
   message: { error: 'Too many requests' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false }
 });
 
 module.exports = { webhookLimiter, apiLimiter };
