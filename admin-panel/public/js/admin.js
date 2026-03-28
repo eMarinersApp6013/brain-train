@@ -247,7 +247,8 @@ async function generateQuestions() {
       type: document.getElementById('gen-type').value,
       difficulty: document.getElementById('gen-difficulty').value,
       audience: document.getElementById('gen-audience').value,
-      count: parseInt(document.getElementById('gen-count').value) || 5
+      count: parseInt(document.getElementById('gen-count').value) || 5,
+      provider: document.getElementById('gen-provider').value
     });
     generatedQuestions = data.questions || [];
     renderGenerated();

@@ -2,6 +2,17 @@ const db = require('../db/pool');
 const whatsapp = require('../services/whatsapp');
 const content = require('../services/content');
 
+function detectCountry(phone) {
+  if (phone.startsWith('+91')) return { country: 'India', code: 'IN' };
+  if (phone.startsWith('+1')) return { country: 'USA', code: 'US' };
+  if (phone.startsWith('+44')) return { country: 'UK', code: 'GB' };
+  if (phone.startsWith('+971')) return { country: 'UAE', code: 'AE' };
+  if (phone.startsWith('+966')) return { country: 'Saudi Arabia', code: 'SA' };
+  if (phone.startsWith('+65')) return { country: 'Singapore', code: 'SG' };
+  if (phone.startsWith('+61')) return { country: 'Australia', code: 'AU' };
+  return { country: 'Unknown', code: '' };
+}
+
 async function handleOnboarding(user, message, conversationId) {
   const msg = message.trim();
   const step = user.onboarding_step;
@@ -16,6 +27,12 @@ async function handleOnboarding(user, message, conversationId) {
     case 'child_age':
       return await stepChildAge(user, msg, conversationId);
 
+    case 'ask_age':
+      return await stepAskAge(user, msg, conversationId);
+
+    case 'ask_name':
+      return await stepAskName(user, msg, conversationId);
+
     case 'time_select':
       return await stepTimeSelect(user, msg, conversationId);
 
@@ -28,15 +45,22 @@ async function handleOnboarding(user, message, conversationId) {
 }
 
 async function stepStart(user, conversationId) {
+  // Detect country from phone number and update user record
+  const u = await db.getOne('SELECT phone FROM users WHERE id = $1', [user.id]);
+  if (u && u.phone) {
+    const { country, code } = detectCountry(u.phone);
+    await db.query('UPDATE users SET country = $1, country_code = $2 WHERE id = $3', [country, code, user.id]);
+  }
+
   await db.query("UPDATE users SET onboarding_step = 'mode_select' WHERE id = $1", [user.id]);
   await whatsapp.sendWelcomeMessage(conversationId);
 }
 
 async function stepModeSelect(user, msg, conversationId) {
   if (msg === '1' || msg.toLowerCase().includes('myself') || msg.toLowerCase().includes('adult')) {
-    await db.query("UPDATE users SET mode = 'adult', age_group = 'adult', onboarding_step = 'time_select' WHERE id = $1", [user.id]);
+    await db.query("UPDATE users SET mode = 'adult', age_group = 'adult', onboarding_step = 'ask_age' WHERE id = $1", [user.id]);
     await whatsapp.sendMessage(conversationId,
-      '⏰ *When would you like your daily challenge?*\n\nReply:\n*1* - Morning (8:00 AM)\n*2* - Afternoon (1:00 PM)\n*3* - Evening (7:00 PM)'
+      '🎂 *How old are you?*\n\nPlease enter your age (18-100).'
     );
   } else if (msg === '2' || msg.toLowerCase().includes('child') || msg.toLowerCase().includes('kid')) {
     await db.query("UPDATE users SET mode = 'kids', onboarding_step = 'child_age' WHERE id = $1", [user.id]);
@@ -48,6 +72,28 @@ async function stepModeSelect(user, msg, conversationId) {
       'Please reply *1* (for myself) or *2* (for my child).'
     );
   }
+}
+
+async function stepAskAge(user, msg, conversationId) {
+  const age = parseInt(msg);
+  if (isNaN(age) || age < 18 || age > 100) {
+    await whatsapp.sendMessage(conversationId, 'Please enter your age (18-100).');
+    return;
+  }
+  await db.query("UPDATE users SET age = $1, onboarding_step = 'ask_name' WHERE id = $2", [age, user.id]);
+  await whatsapp.sendMessage(conversationId, '👤 *What should I call you?*\n\nPlease type your name.');
+}
+
+async function stepAskName(user, msg, conversationId) {
+  const name = msg.trim().substring(0, 50);
+  if (!name) {
+    await whatsapp.sendMessage(conversationId, 'Please type your name.');
+    return;
+  }
+  await db.query("UPDATE users SET name = $1, onboarding_step = 'time_select' WHERE id = $2", [name, user.id]);
+  await whatsapp.sendMessage(conversationId,
+    `Nice to meet you, *${name}*! 🎉\n\n⏰ *When would you like your daily challenge?*\n\nReply:\n*1* - Morning (8:00 AM)\n*2* - Afternoon (1:00 PM)\n*3* - Evening (7:00 PM)`
+  );
 }
 
 async function stepChildAge(user, msg, conversationId) {
@@ -70,13 +116,11 @@ async function stepChildAge(user, msg, conversationId) {
   }
 
   await db.query(
-    "UPDATE users SET age = $1, age_group = $2, difficulty = $3, onboarding_step = 'time_select' WHERE id = $4",
+    "UPDATE users SET age = $1, age_group = $2, difficulty = $3, onboarding_step = 'ask_name' WHERE id = $4",
     [age, ageGroup, difficulty, user.id]
   );
 
-  await whatsapp.sendMessage(conversationId,
-    '⏰ *When should we send the daily challenge?*\n\nReply:\n*1* - Morning (8:00 AM)\n*2* - Afternoon (1:00 PM)\n*3* - Evening (7:00 PM)'
-  );
+  await whatsapp.sendMessage(conversationId, '👤 *What should I call you?*\n\nPlease type your name.');
 }
 
 async function stepTimeSelect(user, msg, conversationId) {

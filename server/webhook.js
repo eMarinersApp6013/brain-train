@@ -4,7 +4,6 @@ const { handleOnboarding } = require('./handlers/onboarding');
 const { handleAnswer } = require('./handlers/answer');
 const { handleCommand } = require('./handlers/commands');
 
-const TRIGGER_FALLBACKS = ['hi', 'hello', 'start'];
 const processedMessages = new Set();
 
 // Clean up processed message IDs every 5 minutes
@@ -90,7 +89,7 @@ async function handleWebhook(req, res) {
       const triggerKeyword = (await db.getSetting('TRIGGER_KEYWORD') || 'brain').toLowerCase();
       const msgLower = content.toLowerCase().trim();
 
-      if (msgLower === triggerKeyword || TRIGGER_FALLBACKS.includes(msgLower)) {
+      if (msgLower === triggerKeyword) {
         // Create new user
         const newUser = await db.getOne(
           `INSERT INTO users (phone, chatwoot_conversation_id, onboarding_step, last_user_message_at, window_open_until)

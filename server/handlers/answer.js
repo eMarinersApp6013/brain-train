@@ -9,7 +9,7 @@ async function handleAnswer(user, message, conversationId) {
   const session = await db.getOne(
     `SELECT us.*, q.answer, q.answer_type, q.question_text, q.explanation, q.points, q.type, q.memory_recall_text
      FROM user_sessions us JOIN questions q ON us.question_id = q.id
-     WHERE us.user_id = $1 AND us.answered_at IS NULL
+     WHERE us.user_id = $1 AND us.answered_at IS NULL AND us.sent_at IS NOT NULL
      ORDER BY us.sent_at DESC LIMIT 1`,
     [user.id]
   );
@@ -51,6 +51,8 @@ async function handleAnswer(user, message, conversationId) {
         const resultMsg = content.formatResultMessage(isCorrect, memoryPoints, stats.streak, explanation);
         await whatsapp.sendMessage(conversationId, resultMsg);
         await scoring.checkAndAwardBadges(user.id);
+        // After memory answer, check for next question in session
+        await sendNextOrSummary(user, conversationId);
         return;
       }
       isCorrect = content.checkKeywordAnswer(session.answer, userAnswer);
@@ -94,9 +96,63 @@ async function handleAnswer(user, message, conversationId) {
     await whatsapp.sendMessage(conversationId, `🏅 *Achievement Unlocked!*\n\n${badge.badge_label}\n\nKeep up the great work!`);
   }
 
-  // Check if Wednesday math (send next question)
-  if (session.type === 'math') {
-    await sendNextMathQuestion(user, conversationId);
+  // Send next question in the session or session summary
+  await sendNextOrSummary(user, conversationId);
+}
+
+async function sendNextOrSummary(user, conversationId) {
+  // Send next question in the session
+  const nextSession = await db.getOne(
+    `SELECT us.id, q.* FROM user_sessions us
+     JOIN questions q ON us.question_id = q.id
+     WHERE us.user_id = $1 AND us.session_date = CURRENT_DATE AND us.session_type = 'daily' AND us.sent_at IS NULL
+     ORDER BY us.id ASC LIMIT 1`,
+    [user.id]
+  );
+
+  if (nextSession) {
+    // Count progress
+    const total = await db.getOne(
+      'SELECT COUNT(*) as cnt FROM user_sessions WHERE user_id = $1 AND session_date = CURRENT_DATE AND session_type = $2',
+      [user.id, 'daily']
+    );
+    const answered = await db.getOne(
+      'SELECT COUNT(*) as cnt FROM user_sessions WHERE user_id = $1 AND session_date = CURRENT_DATE AND session_type = $2 AND answered_at IS NOT NULL',
+      [user.id, 'daily']
+    );
+    const qNum = parseInt(answered.cnt) + 1;
+    const qTotal = parseInt(total.cnt);
+
+    // Mark as sent
+    await db.query('UPDATE user_sessions SET sent_at = NOW() WHERE id = $1', [nextSession.id]);
+
+    const dayOfWeek = content.getDayType(new Date());
+    const weekNum = content.getWeekNumber();
+    const msg = `*Question ${qNum}/${qTotal}*\n\n${content.formatChallengeMessage(nextSession, dayOfWeek, weekNum)}`;
+    await whatsapp.sendMessage(conversationId, msg);
+  } else {
+    // All questions answered - send session summary
+    const sessionResults = await db.getMany(
+      'SELECT points_earned, is_correct, response_time_seconds FROM user_sessions WHERE user_id = $1 AND session_date = CURRENT_DATE AND session_type = $2',
+      [user.id, 'daily']
+    );
+
+    // Only show summary if there were multiple questions in the session
+    if (sessionResults.length > 1) {
+      const totalPts = sessionResults.reduce((s, r) => s + (r.points_earned || 0), 0);
+      const correctCount = sessionResults.filter(r => r.is_correct).length;
+      const totalQ = sessionResults.length;
+      const accuracy = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
+
+      let summary = `🏁 *Session Complete!*\n\n`;
+      summary += `✅ Correct: ${correctCount}/${totalQ}\n`;
+      summary += `🎯 Accuracy: ${accuracy}%\n`;
+      summary += `💰 Points earned: ${totalPts}\n`;
+      summary += `🔥 Streak: ${user.streak} days\n`;
+      summary += `\nGreat work! See you tomorrow! 💪`;
+
+      await whatsapp.sendMessage(conversationId, summary);
+    }
   }
 }
 
@@ -107,52 +163,6 @@ async function saveResult(userId, sessionId, userAnswer, isCorrect, points, resp
     [userAnswer, isCorrect, points, responseTimeSec, hintUsed || false, sessionId]
   );
   await scoring.updateScore(userId, null, points, isCorrect, responseTimeSec);
-}
-
-async function sendNextMathQuestion(user, conversationId) {
-  // Count how many math questions answered today
-  const answered = await db.getMany(
-    `SELECT us.id FROM user_sessions us JOIN questions q ON us.question_id = q.id
-     WHERE us.user_id = $1 AND us.session_date = CURRENT_DATE AND q.type = 'math' AND us.answered_at IS NOT NULL`,
-    [user.id]
-  );
-
-  if (answered.length >= 3) return; // All 3 done
-
-  // Find next math question not yet sent today
-  const audience = user.mode === 'adult' ? 'adult' : `kids-${user.age_group}`;
-  const sentIds = await db.getMany(
-    `SELECT us.question_id FROM user_sessions us JOIN questions q ON us.question_id = q.id
-     WHERE us.user_id = $1 AND us.session_date = CURRENT_DATE AND q.type = 'math'`,
-    [user.id]
-  );
-  const excludeIds = sentIds.map(s => s.question_id);
-
-  let whereClause = "q.type = 'math' AND q.difficulty = $1 AND q.is_active = true";
-  const params = [user.difficulty];
-  if (audience !== 'adult') {
-    whereClause += ' AND q.audience = $2';
-    params.push(audience);
-  } else {
-    whereClause += " AND q.audience = 'adult'";
-  }
-  if (excludeIds.length > 0) {
-    whereClause += ` AND q.id NOT IN (${excludeIds.join(',')})`;
-  }
-
-  const question = await db.getOne(
-    `SELECT * FROM questions q WHERE ${whereClause} ORDER BY RANDOM() LIMIT 1`,
-    params
-  );
-
-  if (question) {
-    const num = answered.length + 1;
-    await whatsapp.sendMessage(conversationId, `⚡ *Math Round Q${num + 1}/3:*\n\n${question.question_text}`);
-    await db.query(
-      'INSERT INTO user_sessions (user_id, question_id, sent_at, session_date, session_type) VALUES ($1, $2, NOW(), CURRENT_DATE, $3)',
-      [user.id, question.id, 'daily']
-    );
-  }
 }
 
 module.exports = { handleAnswer };

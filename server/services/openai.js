@@ -132,10 +132,30 @@ async function fuzzyMatchWord(expected, actual) {
   }
 }
 
+async function generateQuestions(type, difficulty, audience, count) {
+  const { client, model } = await getClient();
+  const response = await client.chat.completions.create({
+    model,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a brain training question generator. Generate ${count} ${type} questions at ${difficulty} difficulty for ${audience} audience. Return a JSON array of objects with fields: question_text, hint_text, answer, answer_type (exact/keyword/mcq/fuzzy), explanation, tip_text, points (10-30 based on difficulty). Return ONLY the JSON array, no markdown.`
+      },
+      { role: 'user', content: `Generate ${count} ${type} questions.` }
+    ],
+    temperature: 0.8
+  });
+
+  const text = response.choices[0].message.content.trim();
+  const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  return JSON.parse(cleanText);
+}
+
 module.exports = {
   getClient,
   checkAnswer,
   scoreBrainAge,
   estimateIQ,
-  fuzzyMatchWord
+  fuzzyMatchWord,
+  generateQuestions
 };

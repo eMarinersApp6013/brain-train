@@ -1,15 +1,26 @@
 const { Pool } = require('pg');
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
+const poolConfig = {
   database: process.env.DB_NAME || 'brainping',
   user: process.env.DB_USER || 'postgres',
-  password: String(process.env.DB_PASSWORD || ''),
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000
-});
+};
+
+// Use socket if DB_HOST is empty, TCP otherwise
+if (process.env.DB_HOST) {
+  poolConfig.host = process.env.DB_HOST;
+  poolConfig.port = parseInt(process.env.DB_PORT || '5432');
+} else {
+  poolConfig.host = '/var/run/postgresql';
+}
+
+if (process.env.DB_PASSWORD) {
+  poolConfig.password = process.env.DB_PASSWORD;
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on('error', (err) => {
   console.error('Unexpected pool error:', err);
