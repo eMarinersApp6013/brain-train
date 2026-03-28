@@ -1,0 +1,80 @@
+<section id="sec-modules" class="section">
+  <h2>Special Modules</h2>
+
+  <div class="modules-grid">
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>🧠 Brain Age Test</h4><p class="muted">10-question cognitive age assessment</p></div>
+        <label class="toggle"><input type="checkbox" data-module="brain_age" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group mt-10"><label>Question Count</label><input type="number" data-config="brain_age_count" class="input" value="10" min="5" max="20" onchange="saveModules()"></div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>🧩 IQ Estimation</h4><p class="muted">Progressive difficulty IQ test</p></div>
+        <label class="toggle"><input type="checkbox" data-module="iq_test" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group mt-10"><label><input type="checkbox" data-config="iq_premium_only" checked onchange="saveModules()"> Premium Only</label></div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>⚡ Speed Challenge</h4><p class="muted">Timed bonus challenges</p></div>
+        <label class="toggle"><input type="checkbox" data-module="speed_challenge" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group mt-10"><label>Frequency (days/week)</label><input type="number" data-config="speed_frequency" class="input" value="3" min="1" max="7" onchange="saveModules()"></div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>⚔️ Friend Duel</h4><p class="muted">Challenge friends to head-to-head</p></div>
+        <label class="toggle"><input type="checkbox" data-module="friend_duel" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>🎭 Cognitive Profile</h4><p class="muted">Analyse cognitive style after 7 days</p></div>
+        <label class="toggle"><input type="checkbox" data-module="cognitive_profile" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group mt-10"><label>Trigger after (days)</label><input type="number" data-config="cognitive_days" class="input" value="7" min="3" max="30" onchange="saveModules()"></div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>💬 Coach Message</h4><p class="muted">Weekly personalised coaching</p></div>
+        <label class="toggle"><input type="checkbox" data-module="coach_message" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>🏅 Milestone Badges</h4><p class="muted">Achievement tracking</p></div>
+        <label class="toggle"><input type="checkbox" data-module="badges" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>🏆 Leaderboard Shoutout</h4><p class="muted">Daily top 3 announcement</p></div>
+        <label class="toggle"><input type="checkbox" data-module="leaderboard" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>🔄 Spaced Repetition</h4><p class="muted">Re-test missed questions</p></div>
+        <label class="toggle"><input type="checkbox" data-module="spaced_recall" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group mt-10"><label>Recall gap (days)</label><input type="number" data-config="recall_gap" class="input" value="14" min="7" max="30" onchange="saveModules()"></div>
+    </div>
+
+    <div class="card module-card">
+      <div class="flex-between">
+        <div><h4>❤️ Brain Health Score</h4><p class="muted">Weekly composite score 0-100</p></div>
+        <label class="toggle"><input type="checkbox" data-module="brain_health" checked onchange="saveModules()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+</section>

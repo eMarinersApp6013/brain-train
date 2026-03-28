@@ -1,0 +1,133 @@
+<section id="sec-content" class="section">
+  <h2>Content Management</h2>
+
+  <div class="card">
+    <div class="flex-between">
+      <h3>Question Bank</h3>
+      <div>
+        <button class="btn btn-primary" onclick="showQuestionModal()">+ Add Question</button>
+        <label class="btn btn-secondary">
+          Import CSV <input type="file" accept=".csv" onchange="importCSV(this)" hidden>
+        </label>
+        <button class="btn btn-secondary" onclick="exportQuestions()">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="filter-bar mt-10">
+      <select id="filter-type" class="input" onchange="loadQuestions()">
+        <option value="">All Types</option>
+        <option value="logic">Logic</option>
+        <option value="words">Words</option>
+        <option value="math">Math</option>
+        <option value="pattern">Pattern</option>
+        <option value="memory">Memory</option>
+        <option value="trivia">Trivia</option>
+        <option value="riddle">Riddle</option>
+        <option value="brain_age">Brain Age</option>
+        <option value="iq">IQ</option>
+      </select>
+      <select id="filter-difficulty" class="input" onchange="loadQuestions()">
+        <option value="">All Difficulties</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <select id="filter-audience" class="input" onchange="loadQuestions()">
+        <option value="">All Audiences</option>
+        <option value="adult">Adult</option>
+        <option value="kids-6-9">Kids 6-9</option>
+        <option value="kids-10-13">Kids 10-13</option>
+        <option value="kids-14-17">Kids 14-17</option>
+      </select>
+      <select id="filter-week" class="input" onchange="loadQuestions()">
+        <option value="">All Weeks</option>
+        <option value="1">Week 1</option>
+        <option value="2">Week 2</option>
+        <option value="3">Week 3</option>
+        <option value="4">Week 4</option>
+      </select>
+    </div>
+
+    <table class="table mt-10">
+      <thead><tr><th>ID</th><th>Type</th><th>Diff</th><th>Audience</th><th>Question</th><th>Answer</th><th>Pts</th><th>Actions</th></tr></thead>
+      <tbody id="questions-table"></tbody>
+    </table>
+    <div id="questions-pagination" class="pagination mt-10"></div>
+  </div>
+
+  <!-- Question Modal -->
+  <div id="question-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="flex-between">
+        <h3 id="question-modal-title">Add Question</h3>
+        <button class="btn-close" onclick="closeModal('question-modal')">&times;</button>
+      </div>
+      <form id="question-form" onsubmit="saveQuestion(event)">
+        <input type="hidden" id="q-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Week</label>
+            <select id="q-week" class="input"><option value="">-</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+          </div>
+          <div class="form-group">
+            <label>Day</label>
+            <select id="q-day" class="input"><option value="">-</option><option value="monday">Mon</option><option value="tuesday">Tue</option><option value="wednesday">Wed</option><option value="thursday">Thu</option><option value="friday">Fri</option><option value="saturday">Sat</option><option value="sunday">Sun</option></select>
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="q-type" class="input" required><option value="logic">Logic</option><option value="words">Words</option><option value="math">Math</option><option value="pattern">Pattern</option><option value="memory">Memory</option><option value="trivia">Trivia</option><option value="riddle">Riddle</option><option value="brain_age">Brain Age</option><option value="iq">IQ</option></select>
+          </div>
+          <div class="form-group">
+            <label>Difficulty</label>
+            <select id="q-difficulty" class="input"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
+          </div>
+          <div class="form-group">
+            <label>Audience</label>
+            <select id="q-audience" class="input"><option value="adult">Adult</option><option value="kids-6-9">Kids 6-9</option><option value="kids-10-13">Kids 10-13</option><option value="kids-14-17">Kids 14-17</option></select>
+          </div>
+          <div class="form-group">
+            <label>Answer Type</label>
+            <select id="q-answertype" class="input"><option value="exact">Exact</option><option value="keyword">Keyword</option><option value="mcq">MCQ</option><option value="fuzzy">Fuzzy</option><option value="ai_check">AI Check</option></select>
+          </div>
+        </div>
+        <div class="form-group mt-10">
+          <label>Question Text</label>
+          <textarea id="q-text" class="input" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Answer (pipe-separated variants)</label>
+          <input type="text" id="q-answer" class="input" required placeholder="answer1|answer2|answer3">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Hint</label>
+            <input type="text" id="q-hint" class="input">
+          </div>
+          <div class="form-group">
+            <label>Points</label>
+            <input type="number" id="q-points" class="input" value="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Explanation</label>
+          <textarea id="q-explanation" class="input" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tip</label>
+          <input type="text" id="q-tip" class="input">
+        </div>
+        <div class="form-group">
+          <label>Memory Recall Text (Friday only)</label>
+          <textarea id="q-recall" class="input" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Theme</label>
+          <input type="text" id="q-theme" class="input" placeholder="e.g. Science Week">
+        </div>
+        <div class="mt-10">
+          <button type="submit" class="btn btn-primary">Save Question</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

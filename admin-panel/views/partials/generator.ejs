@@ -1,0 +1,59 @@
+<section id="sec-generator" class="section">
+  <h2>AI Question Generator</h2>
+
+  <div class="card">
+    <h3>Generate Questions</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="gen-type" class="input">
+          <option value="logic">Logic</option>
+          <option value="words">Words</option>
+          <option value="math">Math</option>
+          <option value="pattern">Pattern</option>
+          <option value="trivia">Trivia</option>
+          <option value="riddle">Riddle</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select id="gen-difficulty" class="input">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Audience</label>
+        <select id="gen-audience" class="input">
+          <option value="adult">Adult</option>
+          <option value="kids-6-9">Kids 6-9</option>
+          <option value="kids-10-13">Kids 10-13</option>
+          <option value="kids-14-17">Kids 14-17</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Count (1-50)</label>
+        <input type="number" id="gen-count" class="input" value="5" min="1" max="50">
+      </div>
+    </div>
+    <div class="mt-10">
+      <button class="btn btn-primary" onclick="generateQuestions()" id="gen-btn">🤖 Generate with AI</button>
+      <span id="gen-loading" class="hidden">⏳ Generating...</span>
+    </div>
+  </div>
+
+  <div id="gen-results" class="card mt-20 hidden">
+    <div class="flex-between">
+      <h3>Generated Questions (<span id="gen-count-label">0</span>)</h3>
+      <div>
+        <button class="btn btn-success" onclick="saveAllGenerated()">Save All to Database</button>
+        <button class="btn btn-danger" onclick="discardAllGenerated()">Discard All</button>
+      </div>
+    </div>
+    <table class="table mt-10">
+      <thead><tr><th>#</th><th>Question</th><th>Answer</th><th>Hint</th><th>Points</th><th>Actions</th></tr></thead>
+      <tbody id="gen-table"></tbody>
+    </table>
+  </div>
+</section>

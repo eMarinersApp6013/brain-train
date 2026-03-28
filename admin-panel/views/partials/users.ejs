@@ -1,0 +1,35 @@
+<section id="sec-users" class="section">
+  <h2>Users</h2>
+
+  <div class="card">
+    <div class="flex-between">
+      <div class="form-row">
+        <input type="text" id="user-search" class="input" placeholder="Search by phone or name..." onkeyup="debounceSearch(loadUsers, 300)">
+        <select id="user-status" class="input" onchange="loadUsers()">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary" onclick="exportUsers()">Export CSV</button>
+    </div>
+
+    <table class="table mt-10">
+      <thead><tr><th>Phone</th><th>Name</th><th>Mode</th><th>Difficulty</th><th>Streak</th><th>Points</th><th>Plan</th><th>Status</th><th>Last Active</th><th>Actions</th></tr></thead>
+      <tbody id="users-table"></tbody>
+    </table>
+    <div id="users-pagination" class="pagination mt-10"></div>
+  </div>
+
+  <!-- User Detail Modal -->
+  <div id="user-modal" class="modal hidden">
+    <div class="modal-content modal-wide">
+      <div class="flex-between">
+        <h3>User Detail</h3>
+        <button class="btn-close" onclick="closeModal('user-modal')">&times;</button>
+      </div>
+      <div id="user-detail"></div>
+    </div>
+  </div>
+</section>

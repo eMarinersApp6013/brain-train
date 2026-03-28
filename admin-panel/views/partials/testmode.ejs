@@ -1,0 +1,52 @@
+<section id="sec-testmode" class="section">
+  <h2>Test Mode</h2>
+
+  <div class="card">
+    <div class="flex-between">
+      <div>
+        <h3>Test Mode</h3>
+        <p class="muted">When enabled, only whitelisted numbers receive messages</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="test-mode-toggle" onchange="toggleTestMode()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card mt-20">
+    <h3>Trigger Keyword</h3>
+    <div class="form-row">
+      <input type="text" id="trigger-keyword" placeholder="brain" class="input">
+      <button class="btn btn-primary" onclick="saveTriggerKeyword()">Save</button>
+    </div>
+  </div>
+
+  <div class="card mt-20">
+    <div class="flex-between">
+      <h3>Whitelist</h3>
+      <button class="btn btn-primary" onclick="showWhitelistForm()">+ Add Number</button>
+    </div>
+
+    <div id="whitelist-form" class="form-inline hidden mt-10">
+      <input type="text" id="wl-phone" placeholder="+919876543210" class="input">
+      <input type="text" id="wl-label" placeholder="Label (e.g. Tester 1)" class="input">
+      <select id="wl-difficulty" class="input">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <select id="wl-timeslot" class="input">
+        <option value="08:00">Morning 8AM</option>
+        <option value="13:00">Afternoon 1PM</option>
+        <option value="19:00">Evening 7PM</option>
+      </select>
+      <button class="btn btn-success" onclick="addWhitelist()">Add</button>
+    </div>
+
+    <table class="table mt-10">
+      <thead><tr><th>Phone</th><th>Label</th><th>Difficulty</th><th>Time</th><th>Active</th><th>Actions</th></tr></thead>
+      <tbody id="whitelist-table"></tbody>
+    </table>
+  </div>
+</section>
