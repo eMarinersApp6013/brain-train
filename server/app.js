@@ -40,6 +40,7 @@ function createApp(type) {
     const adminViewsDir = path.join(__dirname, '../admin-panel/views');
     app.set('view engine', 'ejs');
     app.set('views', adminViewsDir);
+    app.use('/admin', express.static(path.join(__dirname, '../admin-panel/public')));
     app.use(express.static(path.join(__dirname, '../admin-panel/public')));
     app.use('/api/admin', adminRoutes);
     app.get('*', (req, res) => {
