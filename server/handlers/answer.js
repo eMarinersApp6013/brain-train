@@ -15,6 +15,13 @@ async function handleAnswer(user, message, conversationId) {
   );
 
   if (!session) {
+    // If user sent a single digit, show modules menu
+    const msg = message.trim();
+    if (/^[1-8]$/.test(msg)) {
+      const { handleCommand } = require('./commands');
+      await handleCommand(user, 'MODULES', conversationId);
+      return;
+    }
     await whatsapp.sendMessage(conversationId,
       "Type *MODULES* to start a brain training session!\nOr type *MENU* to see all commands."
     );
