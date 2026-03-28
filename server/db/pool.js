@@ -1,15 +1,21 @@
 const { Pool } = require('pg');
 
-const pool = new Pool({
+const poolConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'brainping',
   user: process.env.DB_USER || 'postgres',
-  password: String(process.env.DB_PASSWORD || ''),
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000
-});
+};
+
+// Only set password if provided — empty string triggers SASL auth failure on trust connections
+if (process.env.DB_PASSWORD) {
+  poolConfig.password = process.env.DB_PASSWORD;
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on('error', (err) => {
   console.error('Unexpected pool error:', err);
