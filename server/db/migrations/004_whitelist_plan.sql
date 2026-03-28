@@ -1,0 +1,1 @@
+ALTER TABLE whitelist ADD COLUMN IF NOT EXISTS plan_type VARCHAR(20) DEFAULT 'free';

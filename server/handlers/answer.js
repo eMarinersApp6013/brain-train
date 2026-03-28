@@ -16,7 +16,7 @@ async function handleAnswer(user, message, conversationId) {
 
   if (!session) {
     await whatsapp.sendMessage(conversationId,
-      "🤔 You don't have a pending challenge right now. Your next one will arrive at your scheduled time!"
+      "Type *MODULES* to start a brain training session!\nOr type *MENU* to see all commands."
     );
     return;
   }

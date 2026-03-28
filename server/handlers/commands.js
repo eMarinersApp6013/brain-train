@@ -105,7 +105,12 @@ async function handleCommand(user, message, conversationId) {
     return true;
   }
 
-  if (cmd === 'MODULES' || cmd === 'EXPLORE') {
+  if (cmd === 'MODULES' || cmd === 'MODULE' || cmd === 'EXPLORE') {
+    return await handleModulesMenu(user, conversationId);
+  }
+
+  // Catch common module-related words
+  if (cmd.startsWith('MODULE') || cmd === 'TEST' || cmd === 'CHALLENGE' || cmd === 'PLAY') {
     return await handleModulesMenu(user, conversationId);
   }
 

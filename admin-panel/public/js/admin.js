@@ -119,7 +119,8 @@ async function addWhitelist() {
       phone: document.getElementById('wl-phone').value,
       label: document.getElementById('wl-label').value,
       difficulty: document.getElementById('wl-difficulty').value,
-      time_slot: document.getElementById('wl-timeslot').value
+      time_slot: document.getElementById('wl-timeslot').value,
+      plan: document.getElementById('wl-plan').value
     });
     showToast('Number added');
     loadTestMode();
@@ -135,7 +136,7 @@ async function removeWhitelist(id) {
 function renderWhitelist(list) {
   const tb = document.getElementById('whitelist-table');
   tb.innerHTML = list.map(w =>
-    `<tr><td>${w.phone}</td><td>${w.label || '-'}</td><td>${w.difficulty}</td><td>${w.time_slot}</td><td>${w.is_active ? '✅' : '❌'}</td><td><button class="btn btn-danger btn-sm" onclick="removeWhitelist(${w.id})">Delete</button></td></tr>`
+    `<tr><td>${w.phone}</td><td>${w.label || '-'}</td><td>${w.difficulty}</td><td>${w.time_slot}</td><td>${w.plan_type || 'free'}</td><td>${w.is_active ? '✅' : '❌'}</td><td><button class="btn btn-danger btn-sm" onclick="removeWhitelist(${w.id})">Delete</button></td></tr>`
   ).join('');
 }
 
