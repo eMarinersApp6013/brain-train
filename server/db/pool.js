@@ -1,8 +1,6 @@
 const { Pool } = require('pg');
 
 const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'brainping',
   user: process.env.DB_USER || 'postgres',
   max: 20,
@@ -10,7 +8,14 @@ const poolConfig = {
   connectionTimeoutMillis: 2000
 };
 
-// Only set password if provided — empty string triggers SASL auth failure on trust connections
+// Use socket if DB_HOST is empty, TCP otherwise
+if (process.env.DB_HOST) {
+  poolConfig.host = process.env.DB_HOST;
+  poolConfig.port = parseInt(process.env.DB_PORT || '5432');
+} else {
+  poolConfig.host = '/var/run/postgresql';
+}
+
 if (process.env.DB_PASSWORD) {
   poolConfig.password = process.env.DB_PASSWORD;
 }
