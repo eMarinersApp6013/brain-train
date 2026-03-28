@@ -57,13 +57,21 @@ psql -U postgres -d brainping -f database/seeds.sql
 node server/index.js
 ```
 
-## Services
+## Live URLs
 
-| Port | Service | URL |
-|------|---------|-----|
-| 3000 | Webhook Server | `POST /webhook/chatwoot` |
-| 4200 | Admin Panel | `http://localhost:4200` |
-| 4201 | User Portal | `http://localhost:4201` |
+| URL | Service |
+|-----|---------|
+| `https://brain.nodesurge.tech` | User Portal |
+| `https://brain.nodesurge.tech/admin` | Admin Panel |
+| `https://brain.nodesurge.tech/webhook/chatwoot` | Chatwoot Webhook |
+
+## Ports (internal)
+
+| Port | Service |
+|------|---------|
+| 3000 | Webhook Server |
+| 4200 | Admin Panel |
+| 4201 | User Portal |
 
 ## WhatsApp Commands
 
