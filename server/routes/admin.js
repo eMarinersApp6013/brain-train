@@ -106,16 +106,46 @@ router.post('/whitelist', async (req, res) => {
       [phone, label, difficulty, time_slot, planType]
     );
 
-    // If plan specified, auto-assign when user registers
-    if (plan) {
+    // Auto-assign plan to existing user if they already registered
+    if (plan && plan !== 'free') {
       const planRow = await getOne('SELECT id FROM plans WHERE LOWER(name) = $1', [plan.toLowerCase()]);
       if (planRow) {
-        // Store plan preference in whitelist entry or create user with plan
-        await query('UPDATE whitelist SET difficulty = $1 WHERE phone = $2', [difficulty || 'medium', phone]);
+        const existingUser = await getOne('SELECT id FROM users WHERE phone = $1', [phone]);
+        if (existingUser) {
+          await query('UPDATE users SET plan_id = $1, is_premium = $2 WHERE id = $3',
+            [planRow.id, true, existingUser.id]);
+        }
       }
     }
 
     res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Assign plan to a user
+router.post('/users/:id/assign-plan', async (req, res) => {
+  try {
+    const { plan_name } = req.body;
+    const planRow = await getOne('SELECT * FROM plans WHERE LOWER(name) = $1', [plan_name.toLowerCase()]);
+    if (!planRow) return res.status(404).json({ error: 'Plan not found' });
+
+    const isPremium = planRow.price_inr > 0;
+    const premiumUntil = isPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null;
+
+    await query(
+      'UPDATE users SET plan_id = $1, is_premium = $2, premium_until = $3 WHERE id = $4',
+      [planRow.id, isPremium, premiumUntil, req.params.id]
+    );
+
+    // Create subscription record
+    await query(
+      'INSERT INTO subscriptions (user_id, plan_id, started_at, ends_at, is_active) VALUES ($1, $2, NOW(), $3, true)',
+      [req.params.id, planRow.id, premiumUntil]
+    );
+
+    res.json({ success: true, plan: planRow.name, is_premium: isPremium });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -334,6 +334,9 @@ async function viewUser(id) {
       <div class="form-grid">
         <div><strong>Phone:</strong> ${u.phone}</div>
         <div><strong>Name:</strong> ${u.name || '-'}</div>
+        <div><strong>Age:</strong> ${u.age || '-'}</div>
+        <div><strong>Gender:</strong> ${u.gender || '-'}</div>
+        <div><strong>Country:</strong> ${u.country || '-'}</div>
         <div><strong>Mode:</strong> ${u.mode}</div>
         <div><strong>Difficulty:</strong> ${u.difficulty}</div>
         <div><strong>Streak:</strong> 🔥${u.streak} (Best: ${u.longest_streak})</div>
@@ -341,12 +344,35 @@ async function viewUser(id) {
         <div><strong>Brain Age:</strong> ${u.brain_age_score || '-'}</div>
         <div><strong>IQ:</strong> ${u.iq_estimate_score || '-'}</div>
         <div><strong>Style:</strong> ${u.cognitive_style || '-'}</div>
+        <div><strong>Profession:</strong> ${u.profession || '-'}</div>
+        <div><strong>Interests:</strong> ${u.interests || '-'}</div>
+        <div><strong>Plan:</strong> ${u.plan_name || 'Free'} ${u.is_premium ? '⭐' : ''}</div>
         <div><strong>Joined:</strong> ${formatDate(u.joined_at)}</div>
+        <div><strong>Last Active:</strong> ${formatDate(u.last_active)}</div>
+        <div><strong>Onboarding:</strong> ${u.onboarding_step}</div>
+      </div>
+      <h4 class="mt-20">Assign Plan</h4>
+      <div class="form-row">
+        <select id="assign-plan-select" class="input">
+          <option value="free">Free</option>
+          <option value="premium" ${u.is_premium ? 'selected' : ''}>Premium</option>
+          <option value="corporate">Corporate</option>
+        </select>
+        <button class="btn btn-primary" onclick="assignPlan(${u.id})">Assign Plan</button>
       </div>
       <h4 class="mt-20">Recent Sessions</h4>
       <table class="table"><thead><tr><th>Date</th><th>Type</th><th>Correct</th><th>Points</th><th>Time</th></tr></thead>
       <tbody>${sessions.map(s => `<tr><td>${formatDate(s.session_date)}</td><td>${s.session_type}</td><td>${s.is_correct ? '✅' : s.is_correct === false ? '❌' : '-'}</td><td>${s.points_earned || 0}</td><td>${s.response_time_seconds || '-'}s</td></tr>`).join('')}</tbody></table>`;
     show('user-modal');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function assignPlan(userId) {
+  const planName = document.getElementById('assign-plan-select').value;
+  try {
+    await api('POST', '/users/' + userId + '/assign-plan', { plan_name: planName });
+    showToast('Plan assigned: ' + planName);
+    loadUsers();
   } catch (e) { showToast(e.message, 'error'); }
 }
 
