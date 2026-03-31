@@ -14,7 +14,8 @@ const BRAINPING_KEYWORDS = [
   'brain', 'module', 'modules', 'menu', 'stats', 'hint', 'pause', 'resume',
   'level', 'premium', 'brain age', 'brainage', 'iq', 'leaderboard', 'badges',
   'report', 'stop', 'profile', 'explore', 'test', 'challenge', 'play', 'duel',
-  'brain health', 'health'
+  'brain health', 'health', 'remind', 'reminder', 'reminders', 'set reminder',
+  'my reminders', 'horoscope', 'yes', 'no', 'accept', 'reject', 'skip'
 ];
 
 function isBrainPingMessage(content, triggerKeyword) {
@@ -25,8 +26,8 @@ function isBrainPingMessage(content, triggerKeyword) {
   if (BRAINPING_KEYWORDS.includes(msg)) return true;
   // Check DUEL command
   if (msg.startsWith('duel ')) return true;
-  // Single digit 1-8 (module selection or answer during active session)
-  if (/^[1-8]$/.test(msg)) return true;
+  // Single digit 1-10 (module selection or answer during active session)
+  if (/^([1-9]|10)$/.test(msg)) return true;
   return false;
 }
 

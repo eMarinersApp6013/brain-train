@@ -741,4 +741,31 @@ router.get('/sessions', async (req, res) => {
   }
 });
 
+// ─── Health Tips ──────────────────────────────────────────────────────────────
+
+router.get('/health-tips', async (req, res) => {
+  try {
+    const tips = await getMany('SELECT * FROM health_tips ORDER BY category, id');
+    res.json(tips);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/health-tips', async (req, res) => {
+  try {
+    const { category, audience, tip_text, source } = req.body;
+    const tip = await getOne(
+      'INSERT INTO health_tips (category, audience, tip_text, source) VALUES ($1, $2, $3, $4) RETURNING *',
+      [category || 'general', audience || 'all', tip_text, source]
+    );
+    res.json(tip);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.delete('/health-tips/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM health_tips WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
