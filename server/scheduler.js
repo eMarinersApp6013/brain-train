@@ -61,6 +61,47 @@ function start() {
     scheduler.checkCognitiveProfiles();
   }, { timezone: TZ });
 
+  // Health tips at 08:30 AM
+  cron.schedule('30 8 * * *', () => {
+    const healthTips = require('./handlers/modules/health_tips');
+    healthTips.sendHealthTips();
+  }, { timezone: TZ });
+
+  // Check reminders every minute
+  cron.schedule('* * * * *', () => {
+    const reminders = require('./handlers/modules/reminders');
+    reminders.checkAndSendReminders();
+  }, { timezone: TZ });
+
+  // Evening fun question at 8:00 PM
+  cron.schedule('0 20 * * *', () => {
+    try {
+      const evening = require('./handlers/modules/evening_engagement');
+      evening.sendEveningBets();
+    } catch (e) { console.error('[Cron] Evening bet error:', e.message); }
+  }, { timezone: TZ });
+
+  // Evening closeout at 9:00 PM
+  cron.schedule('0 21 * * *', () => {
+    try {
+      const closeout = require('./handlers/modules/daily_closeout');
+      closeout.sendEveningCloseouts();
+    } catch (e) { console.error('[Cron] Closeout error:', e.message); }
+  }, { timezone: TZ });
+
+  // Kids emotional support (Wed and Sat at 4 PM)
+  cron.schedule('0 16 * * 3,6', async () => {
+    try {
+      const kidsSupport = require('./handlers/modules/kids_support');
+      const db = require('./db/pool');
+      const users = await db.getMany("SELECT * FROM users WHERE mode = 'kids' AND is_active = true AND onboarding_step = 'complete'");
+      for (const user of users) {
+        try { await kidsSupport.sendEmotionalSupport(user); } catch(e) {}
+        await new Promise(r => setTimeout(r, 200));
+      }
+    } catch (e) { console.error('[Cron] Kids support error:', e.message); }
+  }, { timezone: TZ });
+
   console.log('[Cron] All jobs scheduled');
 }
 

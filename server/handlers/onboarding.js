@@ -27,6 +27,9 @@ async function handleOnboarding(user, message, conversationId) {
     case 'child_age':
       return await stepChildAge(user, msg, conversationId);
 
+    case 'consent':
+      return await stepConsent(user, msg, conversationId);
+
     case 'ask_age':
       return await stepAskAge(user, msg, conversationId);
 
@@ -58,19 +61,40 @@ async function stepStart(user, conversationId) {
 
 async function stepModeSelect(user, msg, conversationId) {
   if (msg === '1' || msg.toLowerCase().includes('myself') || msg.toLowerCase().includes('adult')) {
-    await db.query("UPDATE users SET mode = 'adult', age_group = 'adult', onboarding_step = 'ask_age' WHERE id = $1", [user.id]);
+    await db.query("UPDATE users SET mode = 'adult', age_group = 'adult', onboarding_step = 'consent' WHERE id = $1", [user.id]);
     await whatsapp.sendMessage(conversationId,
-      '🎂 *How old are you?*\n\nPlease enter your age (18-100).'
+      '📋 *Quick note on your data*\n\nTo personalise your brain training, we collect basic info (age, name, interests). This helps us:\n\n✅ Choose the right difficulty\n✅ Track your progress\n✅ Send relevant exercises\n\n🔗 Terms: https://brain.nodesurge.tech/terms\n\nReply:\n*ACCEPT* - I agree\n*REJECT* - Skip personalisation'
     );
   } else if (msg === '2' || msg.toLowerCase().includes('child') || msg.toLowerCase().includes('kid')) {
-    await db.query("UPDATE users SET mode = 'kids', onboarding_step = 'child_age' WHERE id = $1", [user.id]);
+    await db.query("UPDATE users SET mode = 'kids', onboarding_step = 'consent' WHERE id = $1", [user.id]);
     await whatsapp.sendMessage(conversationId,
-      '👶 *How old is your child?*\n\nPlease reply with their age (6-17).'
+      '📋 *Data Consent*\n\nWe collect age and progress data to personalise brain training for your child.\n\n🔗 Terms: https://brain.nodesurge.tech/terms\n\nReply:\n*ACCEPT* - I agree\n*REJECT* - Skip'
     );
   } else {
     await whatsapp.sendMessage(conversationId,
       'Please reply *1* (for myself) or *2* (for my child).'
     );
+  }
+}
+
+async function stepConsent(user, msg, conversationId) {
+  const answer = msg.toLowerCase().trim();
+  if (answer === 'accept' || answer === '1' || answer === 'yes') {
+    await db.query("UPDATE users SET consent_accepted = true, consent_accepted_at = NOW(), onboarding_step = $1 WHERE id = $2",
+      [user.mode === 'kids' ? 'child_age' : 'ask_age', user.id]);
+    const nextMsg = user.mode === 'kids'
+      ? '✅ Thank you!\n\n👶 *How old is your child?*\n\nPlease reply with their age (6-17).'
+      : '✅ Thank you!\n\n🎂 *How old are you?*\n\nPlease enter your age (18-100).';
+    await whatsapp.sendMessage(conversationId, nextMsg);
+  } else if (answer === 'reject' || answer === '2' || answer === 'no') {
+    await db.query("UPDATE users SET consent_accepted = false, onboarding_step = $1 WHERE id = $2",
+      [user.mode === 'kids' ? 'child_age' : 'ask_age', user.id]);
+    const nextMsg = user.mode === 'kids'
+      ? 'No problem! Limited personalisation.\n\n👶 *How old is your child?* (6-17)'
+      : 'No problem! Limited personalisation.\n\n🎂 *How old are you?* (18-100)';
+    await whatsapp.sendMessage(conversationId, nextMsg);
+  } else {
+    await whatsapp.sendMessage(conversationId, 'Please reply *ACCEPT* or *REJECT*.');
   }
 }
 

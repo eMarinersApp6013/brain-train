@@ -15,6 +15,13 @@ async function handleAnswer(user, message, conversationId) {
   );
 
   if (!session) {
+    // If user sent a single digit, show modules menu
+    const msg = message.trim();
+    if (/^[1-8]$/.test(msg)) {
+      const { handleCommand } = require('./commands');
+      await handleCommand(user, 'MODULES', conversationId);
+      return;
+    }
     await whatsapp.sendMessage(conversationId,
       "Type *MODULES* to start a brain training session!\nOr type *MENU* to see all commands."
     );
@@ -150,8 +157,28 @@ async function sendNextOrSummary(user, conversationId) {
       summary += `💰 Points earned: ${totalPts}\n`;
       summary += `🔥 Streak: ${user.streak} days\n`;
       summary += `\nGreat work! See you tomorrow! 💪`;
-
       await whatsapp.sendMessage(conversationId, summary);
+
+      // Send detailed answers breakdown
+      const allSessions = await db.getMany(
+        `SELECT us.user_answer, us.is_correct, q.question_text, q.answer, q.explanation
+         FROM user_sessions us JOIN questions q ON us.question_id = q.id
+         WHERE us.user_id = $1 AND us.session_date = CURRENT_DATE AND us.session_type = 'daily' AND us.answered_at IS NOT NULL
+         ORDER BY us.id`, [user.id]
+      );
+      if (allSessions.length > 1) {
+        let answers = '📝 *Answers & Explanations:*\n\n';
+        allSessions.forEach((s, i) => {
+          const icon = s.is_correct ? '✅' : '❌';
+          answers += `*Q${i + 1}:* ${s.question_text.substring(0, 60)}${s.question_text.length > 60 ? '...' : ''}\n`;
+          answers += `${icon} You: ${s.user_answer || '-'}`;
+          if (!s.is_correct) answers += ` | Answer: ${s.answer.split('|')[0]}`;
+          answers += '\n';
+          if (s.explanation) answers += `💡 ${s.explanation.substring(0, 80)}${s.explanation.length > 80 ? '...' : ''}\n`;
+          answers += '\n';
+        });
+        await whatsapp.sendMessage(conversationId, answers);
+      }
     }
   }
 }

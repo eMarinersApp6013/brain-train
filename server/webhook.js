@@ -9,6 +9,28 @@ const processedMessages = new Set();
 // Clean up processed message IDs every 5 minutes
 setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
 
+// BrainPing keywords that activate the bot - everything else is ignored
+const BRAINPING_KEYWORDS = [
+  'brain', 'module', 'modules', 'menu', 'stats', 'hint', 'pause', 'resume',
+  'level', 'premium', 'brain age', 'brainage', 'iq', 'leaderboard', 'badges',
+  'report', 'stop', 'profile', 'explore', 'test', 'challenge', 'play', 'duel',
+  'brain health', 'health', 'remind', 'reminder', 'reminders', 'set reminder',
+  'my reminders', 'horoscope', 'yes', 'no', 'accept', 'reject', 'skip'
+];
+
+function isBrainPingMessage(content, triggerKeyword) {
+  const msg = content.toLowerCase().trim();
+  // Check trigger keyword
+  if (msg === triggerKeyword) return true;
+  // Check known commands
+  if (BRAINPING_KEYWORDS.includes(msg)) return true;
+  // Check DUEL command
+  if (msg.startsWith('duel ')) return true;
+  // Single digit 1-10 (module selection or answer during active session)
+  if (/^([1-9]|10)$/.test(msg)) return true;
+  return false;
+}
+
 async function handleWebhook(req, res) {
   try {
     res.status(200).json({ status: 'ok' });
@@ -31,7 +53,6 @@ async function handleWebhook(req, res) {
                   extractPhone(payload);
 
     if (!conversationId || !phone) {
-      console.log('Webhook missing conversationId or phone:', { conversationId, phone });
       return;
     }
 
@@ -42,10 +63,26 @@ async function handleWebhook(req, res) {
       return; // Silent drop
     }
 
-    // Update message window for known users
+    const triggerKeyword = (await db.getSetting('TRIGGER_KEYWORD') || 'brain').toLowerCase();
+
+    // Check if user exists
     const user = await db.getOne('SELECT * FROM users WHERE phone = $1', [cleanPhone]);
 
     if (user) {
+      // EXISTING USER — only respond to BrainPing-related messages
+      // If user is in active module/onboarding, accept any message (they're answering a question)
+      const hasActiveSession = await db.getOne(
+        'SELECT id FROM user_sessions WHERE user_id = $1 AND answered_at IS NULL AND sent_at IS NOT NULL LIMIT 1',
+        [user.id]
+      );
+      const isInOnboarding = user.onboarding_step !== 'complete';
+      const isInModule = user.module_state && user.module_state.module;
+
+      // Accept message if: in onboarding, in module, has active question, or is a brainping keyword
+      if (!isInOnboarding && !isInModule && !hasActiveSession && !isBrainPingMessage(content, triggerKeyword)) {
+        return; // Silent ignore — not a BrainPing message
+      }
+
       await whatsapp.updateMessageWindow(user.id);
 
       // Update chatwoot conversation ID if changed
@@ -85,21 +122,29 @@ async function handleWebhook(req, res) {
       await handleAnswer(user, content, conversationId);
 
     } else {
-      // NEW USER - check trigger keyword
-      const triggerKeyword = (await db.getSetting('TRIGGER_KEYWORD') || 'brain').toLowerCase();
+      // NEW USER - ONLY respond to trigger keyword
       const msgLower = content.toLowerCase().trim();
 
       if (msgLower === triggerKeyword) {
-        // Create new user
         const newUser = await db.getOne(
           `INSERT INTO users (phone, chatwoot_conversation_id, onboarding_step, last_user_message_at, window_open_until)
            VALUES ($1, $2, 'start', NOW(), NOW() + INTERVAL '23 hours 55 minutes')
            RETURNING *`,
           [cleanPhone, conversationId]
         );
+
+        // Auto-assign plan from whitelist if configured
+        const wlEntry = await db.getOne('SELECT plan_type FROM whitelist WHERE phone = $1 AND is_active = true', [cleanPhone]);
+        if (wlEntry && wlEntry.plan_type && wlEntry.plan_type !== 'free') {
+          const planRow = await db.getOne('SELECT id FROM plans WHERE LOWER(name) = $1', [wlEntry.plan_type.toLowerCase()]);
+          if (planRow) {
+            await db.query('UPDATE users SET plan_id = $1, is_premium = true WHERE id = $2', [planRow.id, newUser.id]);
+          }
+        }
+
         await handleOnboarding(newUser, content, conversationId);
       }
-      // Else: unknown user, no trigger keyword - silent ignore
+      // Else: unknown user, wrong keyword - complete silence
     }
 
   } catch (err) {
@@ -108,7 +153,6 @@ async function handleWebhook(req, res) {
 }
 
 function extractPhone(payload) {
-  // Try various payload structures
   if (payload.sender?.phone_number) return payload.sender.phone_number;
   if (payload.conversation?.contact?.phone_number) return payload.conversation.contact.phone_number;
   return null;

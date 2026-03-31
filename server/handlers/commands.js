@@ -105,6 +105,24 @@ async function handleCommand(user, message, conversationId) {
     return true;
   }
 
+  if (cmd === 'REMIND' || cmd === 'REMINDER' || cmd === 'SET REMINDER') {
+    const reminders = require('./modules/reminders');
+    await reminders.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (cmd === 'REMINDERS' || cmd === 'MY REMINDERS') {
+    const reminders = require('./modules/reminders');
+    await reminders.listReminders(user, conversationId);
+    return true;
+  }
+
+  if (cmd === 'HOROSCOPE') {
+    const horoscope = require('./modules/horoscope');
+    await horoscope.handle(user, message, conversationId);
+    return true;
+  }
+
   if (cmd === 'MODULES' || cmd === 'MODULE' || cmd === 'EXPLORE') {
     return await handleModulesMenu(user, conversationId);
   }
@@ -152,6 +170,36 @@ async function handleModuleResponse(user, message, conversationId) {
   if (state.module === 'profile_build') {
     const profileBuilder = require('./modules/profile_builder');
     await profileBuilder.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'set_reminder') {
+    const reminders = require('./modules/reminders');
+    await reminders.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'horoscope_setup') {
+    const horoscope = require('./modules/horoscope');
+    await horoscope.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'evening_closeout') {
+    const closeout = require('./modules/daily_closeout');
+    await closeout.handleCloseoutResponse(user, message, conversationId, state);
+    return true;
+  }
+
+  if (state.module === 'evening_bet') {
+    const evening = require('./modules/evening_engagement');
+    await evening.handleBetResponse(user, message, conversationId, state);
+    return true;
+  }
+
+  if (state.module === 'aspiration') {
+    const kidsSupport = require('./modules/kids_support');
+    await kidsSupport.handleAspiration(user, message, conversationId);
     return true;
   }
 
@@ -254,6 +302,8 @@ async function handleModulesMenu(user, conversationId) {
   msg += '*6* 📊 Brain Health — Your brain fitness score\n';
   msg += '*7* 🏆 Leaderboard — See top performers\n';
   msg += '*8* 🏅 Badges — View achievements\n';
+  msg += '*9* 🔮 Daily Horoscope — Your stars today\n';
+  msg += '*10* ⏰ Set Reminder — Never forget anything\n';
   msg += '\n💡 Type *MENU* for all commands';
 
   await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
@@ -290,8 +340,16 @@ async function handleModuleChoice(user, message, conversationId) {
     case '8':
       await badges.handle(user, message, conversationId);
       return true;
+    case '9':
+      const horoscopeModule = require('./modules/horoscope');
+      await horoscopeModule.handle(user, message, conversationId);
+      return true;
+    case '10':
+      const remindersModule = require('./modules/reminders');
+      await remindersModule.handle(user, message, conversationId);
+      return true;
     default:
-      await whatsapp.sendMessage(conversationId, 'Please reply with a number 1-8.');
+      await whatsapp.sendMessage(conversationId, 'Please reply with a number 1-10.');
       await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
         JSON.stringify({ module: 'module_select', step: 0 }), user.id
       ]);

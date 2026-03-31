@@ -139,7 +139,7 @@ async function sendWelcomeMessage(conversationId) {
 }
 
 async function sendMenuMessage(conversationId) {
-  const msg = `📋 *BrainPing Menu*\n\nType any command:\n\n📊 *STATS* - Your scores & progress\n💡 *HINT* - Get a clue (-1 point)\n⏸️ *PAUSE* - Stop daily messages\n▶️ *RESUME* - Restart messages\n📈 *LEVEL* - Change difficulty\n⭐ *PREMIUM* - See plans\n🎯 *MODULES* - Explore special modules\n🧠 *BRAIN AGE* - Take brain age test\n🧩 *IQ* - IQ estimation (Premium)\n⚔️ *DUEL +91XXX* - Challenge a friend\n🏆 *LEADERBOARD* - Weekly top 10\n🏅 *BADGES* - Your achievements\n📄 *REPORT* - Weekly brain report\n🛑 *STOP* - Unsubscribe`;
+  const msg = `📋 *BrainPing Menu*\n\nType any command:\n\n📊 *STATS* - Your scores & progress\n🎯 *MODULES* - Explore special modules\n💡 *HINT* - Get a clue (-1 point)\n⏰ *REMIND* - Set a daily reminder\n🔮 *HOROSCOPE* - Daily horoscope\n👤 *PROFILE* - Build your brain profile\n📈 *LEVEL* - Change difficulty\n⭐ *PREMIUM* - See plans\n🧠 *BRAIN AGE* - Take brain age test\n🧩 *IQ* - IQ estimation (Premium)\n⚔️ *DUEL +91XXX* - Challenge a friend\n🏆 *LEADERBOARD* - Weekly top 10\n🏅 *BADGES* - Your achievements\n📄 *REPORT* - Weekly brain report\n⏸️ *PAUSE* / ▶️ *RESUME* - Toggle messages\n🛑 *STOP* - Unsubscribe`;
   await sendMessage(conversationId, msg);
 }
 
