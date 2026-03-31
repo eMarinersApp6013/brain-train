@@ -4,5 +4,6 @@ const { handleWebhook } = require('../webhook');
 const { webhookLimiter } = require('../middleware/rateLimit');
 
 router.post('/chatwoot', webhookLimiter, handleWebhook);
+router.post('/chatwoot/incoming', webhookLimiter, handleWebhook);
 
 module.exports = router;
