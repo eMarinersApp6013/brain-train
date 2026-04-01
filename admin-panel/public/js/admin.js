@@ -592,6 +592,186 @@ function renderPagination(containerId, total, perPage, currentPage, loadFn) {
 }
 
 // ============================================================
+// Health Tips
+// ============================================================
+async function loadHealthTips() {
+  try {
+    const tips = await api('GET', '/health-tips');
+    const tb = document.getElementById('tips-table');
+    tb.innerHTML = (tips || []).map(t =>
+      `<tr><td>${t.id}</td><td>${t.category}</td><td>${t.audience}</td><td>${truncate(t.tip_text, 60)}</td><td>${t.source || '-'}</td><td><button class="btn btn-sm btn-danger" onclick="deleteTip(${t.id})">Delete</button></td></tr>`
+    ).join('');
+  } catch (e) { console.error(e); }
+}
+
+function showTipForm() { show('tip-form'); }
+
+async function saveTip() {
+  try {
+    await api('POST', '/health-tips', {
+      category: document.getElementById('tip-category').value,
+      audience: document.getElementById('tip-audience').value,
+      tip_text: document.getElementById('tip-text').value,
+      source: document.getElementById('tip-source').value || null
+    });
+    showToast('Tip added');
+    hide('tip-form');
+    loadHealthTips();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteTip(id) {
+  if (!confirm('Delete this tip?')) return;
+  await api('DELETE', '/health-tips/' + id);
+  showToast('Tip deleted');
+  loadHealthTips();
+}
+
+// ============================================================
+// WhatsApp Flow Visualizer
+// ============================================================
+function renderFlow(view) {
+  const container = document.getElementById('flow-container');
+  const flows = {
+    onboarding: `
+      <div class="flow-group"><div class="flow-group-title">Onboarding Flow</div>
+        <div class="flow-node bot"><div class="node-label">Trigger</div><div class="node-text">User sends <strong>"brain"</strong> on WhatsApp</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node action"><div class="node-label">System</div><div class="node-text">Create user record, detect country from phone</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-label">Bot Message</div><div class="node-text">Welcome to BrainPing! Are you joining for yourself or a child?<br>1 - For myself | 2 - For my child</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node user"><div class="node-label">User Reply</div><div class="node-text">1 or 2</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-label">T&C Consent</div><div class="node-text">We collect basic info to personalise training. Reply ACCEPT or REJECT</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-branch">
+          <div><div class="flow-branch-label">Adult Path</div>
+            <div class="flow-node bot"><div class="node-text">How old are you? (18-100)</div></div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node bot"><div class="node-text">What should I call you?</div></div>
+          </div>
+          <div><div class="flow-branch-label">Kids Path</div>
+            <div class="flow-node bot"><div class="node-text">How old is your child? (6-17)</div></div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node action"><div class="node-text">Auto-set difficulty by age group</div></div>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Choose time: 1-Morning 8AM | 2-Afternoon 1PM | 3-Evening 7PM</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Choose difficulty: 1-Easy | 2-Medium | 3-Hard (adults only)</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-label">Complete</div><div class="node-text">You're all set! Shows available modules (1-10)</div></div>
+      </div>`,
+    daily: `
+      <div class="flow-group"><div class="flow-group-title">Daily Session Flow</div>
+        <div class="flow-node action"><div class="node-label">Scheduler (Cron)</div><div class="node-text">7:55 AM / 12:55 PM / 6:55 PM based on user preference</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node action"><div class="node-text">Check: window open? test mode? user active?</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Daily Session — Today's challenge: [Type] — Questions: 10</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Question 1/10: [Question text]</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node user"><div class="node-text">User answers</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">✅/❌ Result + points → Question 2/10...</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node action"><div class="node-text">Repeat for all 10 questions</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-label">Session Complete</div><div class="node-text">Score: X/10 | Accuracy: X% | Points: X | Streak: X days</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">📝 Full answers & explanations for each question</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node action"><div class="node-text">Check adaptive difficulty → may level up/down</div></div>
+      </div>`,
+    modules: `
+      <div class="flow-group"><div class="flow-group-title">Modules Flow</div>
+        <div class="flow-node user"><div class="node-text">User types MODULES</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Available Modules:<br>1 🧠 Brain Age | 2 🧩 IQ | 3 ⚡ Speed<br>4 ⚔️ Duel | 5 💡 Profile | 6 📊 Health<br>7 🏆 Leaderboard | 8 🏅 Badges<br>9 🔮 Horoscope | 10 ⏰ Reminder<br>11 🧠 N-Back Memory | 12 🔄 Life Memory | 13 🔍 Attention</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-branch">
+          <div><div class="flow-branch-label">Brain Age (1)</div><div class="flow-node bot"><div class="node-text">10 questions → scored → "Your brain is X years old"</div></div></div>
+          <div><div class="flow-branch-label">N-Back (11)</div><div class="flow-node bot"><div class="node-text">Choose 1/2/3-back → letter sequence → YES/NO per letter</div></div></div>
+          <div><div class="flow-branch-label">Attention (13)</div><div class="flow-node bot"><div class="node-text">Random: emoji count / letter count / reading detail / stroop</div></div></div>
+        </div>
+      </div>`,
+    evening: `
+      <div class="flow-group"><div class="flow-group-title">Evening Flow (Automated)</div>
+        <div class="flow-node action"><div class="node-label">8:00 PM</div><div class="node-text">Evening Brain Teaser — fun fact question</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">🎲 Evening Brain Teaser! [Question] — Reply YES to see answer</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node user"><div class="node-text">YES</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">✨ Answer + fun fact</div></div>
+        <div class="flow-arrow">↓ 1 hour later</div>
+        <div class="flow-node action"><div class="node-label">9:00 PM</div><div class="node-text">Evening Closeout</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Today's performance + How was your day? (1-5 mood)</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-text">Gratitude moment: Name one thing you're grateful for today</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node bot"><div class="node-label">Night</div><div class="node-text">Good night! Your brain consolidates memories during sleep 🌙</div></div>
+      </div>`,
+    commands: `
+      <div class="flow-group"><div class="flow-group-title">All Commands</div>
+        <table class="table">
+          <thead><tr><th>Command</th><th>Action</th><th>Flow</th></tr></thead>
+          <tbody>
+            <tr><td><strong>brain</strong></td><td>Start onboarding (new users)</td><td>Onboarding flow</td></tr>
+            <tr><td><strong>MENU</strong></td><td>Show all commands</td><td>Single message</td></tr>
+            <tr><td><strong>MODULES</strong></td><td>Show module selection</td><td>10-item menu</td></tr>
+            <tr><td><strong>STATS</strong></td><td>Show personal stats</td><td>Single message</td></tr>
+            <tr><td><strong>HINT</strong></td><td>Get hint for pending Q</td><td>Single message (-1 pt)</td></tr>
+            <tr><td><strong>BRAIN AGE</strong></td><td>10-question assessment</td><td>Multi-step (10 Q&A)</td></tr>
+            <tr><td><strong>IQ</strong></td><td>IQ estimation (Premium)</td><td>Multi-step (15 Q&A)</td></tr>
+            <tr><td><strong>DUEL +91XXX</strong></td><td>Challenge a friend</td><td>Paired session</td></tr>
+            <tr><td><strong>REMIND</strong></td><td>Set a reminder</td><td>2-step (text → time)</td></tr>
+            <tr><td><strong>HOROSCOPE</strong></td><td>Daily horoscope</td><td>AI-generated</td></tr>
+            <tr><td><strong>PROFILE</strong></td><td>Build brain profile</td><td>Multi-step personal Q</td></tr>
+            <tr><td><strong>LEADERBOARD</strong></td><td>Weekly top 10</td><td>Single message</td></tr>
+            <tr><td><strong>BADGES</strong></td><td>View achievements</td><td>Single message</td></tr>
+            <tr><td><strong>LEVEL</strong></td><td>Change difficulty</td><td>1-step selection</td></tr>
+            <tr><td><strong>PREMIUM</strong></td><td>See plans</td><td>Single message</td></tr>
+            <tr><td><strong>REPORT</strong></td><td>Weekly brain report</td><td>Single message</td></tr>
+            <tr><td><strong>PAUSE / RESUME</strong></td><td>Toggle messages</td><td>Single message</td></tr>
+            <tr><td><strong>STOP</strong></td><td>Unsubscribe</td><td>Single message</td></tr>
+          </tbody>
+        </table>
+      </div>`
+  };
+  container.innerHTML = flows[view] || flows.onboarding;
+}
+
+// ============================================================
+// Section load handler update
+// ============================================================
+const origOnSectionLoad = onSectionLoad;
+function onSectionLoadExtended(section) {
+  origOnSectionLoad(section);
+  if (section === 'health-tips') loadHealthTips();
+  if (section === 'flow') renderFlow('onboarding');
+}
+// Replace the original handler
+document.querySelectorAll('[data-section]').forEach(link => {
+  link.removeEventListener('click', link._handler);
+  const handler = function(e) {
+    e.preventDefault();
+    const section = this.dataset.section;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.getElementById('sec-' + section).classList.add('active');
+    this.classList.add('active');
+    onSectionLoadExtended(section);
+  };
+  link._handler = handler;
+  link.addEventListener('click', handler);
+});
+
+// ============================================================
 // Init
 // ============================================================
 (async function init() {

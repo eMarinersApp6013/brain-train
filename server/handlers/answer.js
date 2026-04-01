@@ -3,6 +3,7 @@ const whatsapp = require('../services/whatsapp');
 const content = require('../services/content');
 const scoring = require('../services/scoring');
 const openai = require('../services/openai');
+const adaptive = require('../services/adaptive');
 
 async function handleAnswer(user, message, conversationId) {
   // Find most recent unanswered session
@@ -179,6 +180,14 @@ async function sendNextOrSummary(user, conversationId) {
         });
         await whatsapp.sendMessage(conversationId, answers);
       }
+
+      // Check adaptive difficulty
+      try {
+        const change = await adaptive.adjustDifficulty(user.id);
+        if (change && change.changed) {
+          await adaptive.notifyDifficultyChange(user, change, conversationId);
+        }
+      } catch (e) { console.error('Adaptive difficulty error:', e.message); }
     }
   }
 }

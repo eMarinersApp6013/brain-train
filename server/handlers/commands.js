@@ -203,6 +203,24 @@ async function handleModuleResponse(user, message, conversationId) {
     return true;
   }
 
+  if (state.module === 'nback') {
+    const nback = require('./modules/nback');
+    await nback.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'life_memory') {
+    const lifeMemory = require('./modules/life_memory');
+    await lifeMemory.handle(user, message, conversationId);
+    return true;
+  }
+
+  if (state.module === 'attention') {
+    const attention = require('./modules/attention');
+    await attention.handle(user, message, conversationId);
+    return true;
+  }
+
   return false;
 }
 
@@ -304,6 +322,9 @@ async function handleModulesMenu(user, conversationId) {
   msg += '*8* 🏅 Badges — View achievements\n';
   msg += '*9* 🔮 Daily Horoscope — Your stars today\n';
   msg += '*10* ⏰ Set Reminder — Never forget anything\n';
+  msg += '*11* 🧠 N-Back Memory — #1 science-backed exercise\n';
+  msg += '*12* 🔄 Life Memory — Train with YOUR real memories\n';
+  msg += '*13* 🔍 Attention & Focus — Sharpen your concentration\n';
   msg += '\n💡 Type *MENU* for all commands';
 
   await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
@@ -348,8 +369,20 @@ async function handleModuleChoice(user, message, conversationId) {
       const remindersModule = require('./modules/reminders');
       await remindersModule.handle(user, message, conversationId);
       return true;
+    case '11':
+      const nback = require('./modules/nback');
+      await nback.handle(user, message, conversationId);
+      return true;
+    case '12':
+      const lifeMemory = require('./modules/life_memory');
+      await lifeMemory.handle(user, message, conversationId);
+      return true;
+    case '13':
+      const attention = require('./modules/attention');
+      await attention.handle(user, message, conversationId);
+      return true;
     default:
-      await whatsapp.sendMessage(conversationId, 'Please reply with a number 1-10.');
+      await whatsapp.sendMessage(conversationId, 'Please reply with a number 1-13.');
       await db.query("UPDATE users SET module_state = $1 WHERE id = $2", [
         JSON.stringify({ module: 'module_select', step: 0 }), user.id
       ]);
