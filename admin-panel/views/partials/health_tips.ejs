@@ -1,0 +1,56 @@
+<section id="sec-health-tips" class="section">
+  <h2>Health Tips</h2>
+
+  <div class="card">
+    <div class="flex-between">
+      <h3>Manage Health Tips</h3>
+      <button class="btn btn-primary" onclick="showTipForm()">+ Add Tip</button>
+    </div>
+
+    <div id="tip-form" class="hidden mt-10 form-bordered">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="tip-category" class="input">
+            <option value="brain">Brain</option>
+            <option value="body">Body</option>
+            <option value="nutrition">Nutrition</option>
+            <option value="sleep">Sleep</option>
+            <option value="stress">Stress</option>
+            <option value="kids">Kids</option>
+            <option value="senior">Senior</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Audience</label>
+          <select id="tip-audience" class="input">
+            <option value="all">All</option>
+            <option value="adult">Adult</option>
+            <option value="kids-6-9">Kids 6-9</option>
+            <option value="kids-10-13">Kids 10-13</option>
+            <option value="kids-14-17">Kids 14-17</option>
+            <option value="senior">Senior</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group mt-10">
+        <label>Tip Text</label>
+        <textarea id="tip-text" class="input" rows="3" placeholder="Include emoji at start, keep under 200 chars for WhatsApp readability"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Source (optional)</label>
+        <input type="text" id="tip-source" class="input" placeholder="e.g. Harvard Health, NIH">
+      </div>
+      <div class="mt-10">
+        <button class="btn btn-success" onclick="saveTip()">Save Tip</button>
+        <button class="btn btn-secondary" onclick="hide('tip-form')">Cancel</button>
+      </div>
+    </div>
+
+    <table class="table mt-10">
+      <thead><tr><th>ID</th><th>Category</th><th>Audience</th><th>Tip</th><th>Source</th><th>Actions</th></tr></thead>
+      <tbody id="tips-table"></tbody>
+    </table>
+  </div>
+</section>

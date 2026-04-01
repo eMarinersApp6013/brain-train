@@ -26,8 +26,8 @@ function isBrainPingMessage(content, triggerKeyword) {
   if (BRAINPING_KEYWORDS.includes(msg)) return true;
   // Check DUEL command
   if (msg.startsWith('duel ')) return true;
-  // Single digit 1-10 (module selection or answer during active session)
-  if (/^([1-9]|10)$/.test(msg)) return true;
+  // Single digit 1-13 (module selection or answer during active session)
+  if (/^([1-9]|1[0-3])$/.test(msg)) return true;
   return false;
 }
 
